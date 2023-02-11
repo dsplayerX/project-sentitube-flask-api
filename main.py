@@ -3,15 +3,13 @@ import os
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
 
 # Route for seeing a data
 @app.route('/data')
-def get_time():
-  
+def testout():
     # Returning an api for showing in  reactjs
     return {
         'Name':"geek", 
