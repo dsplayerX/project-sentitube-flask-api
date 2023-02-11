@@ -9,13 +9,14 @@ def index():
     
 # Route for seeing a data
 @app.route('/data')
+def testdata():
     # Returning an api for showing in json
-    return jsonify({
+    return {
         'Name':"geek", 
         "Age":"22",
         "Date":"x", 
         "programming":"python"
-        })
+        }
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
