@@ -8,12 +8,10 @@ app = Flask(__name__)
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
 
-app = Flask(__name__)
-  
+
 # Route for seeing a data
 @app.route('/data')
 def get_time():
-  
     # Returning an api for showing in  reactjs
     return {
         'Name':"geek", 
