@@ -5,3 +5,8 @@ itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
 Werkzeug==1.0.1
+google-api-core==2.11.0
+google-api-python-client==2.76.0
+google-auth==2.16.0
+google-auth-httplib2==0.1.0
+googleapis-common-protos==1.58.0
