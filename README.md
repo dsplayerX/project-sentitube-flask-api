@@ -19,5 +19,7 @@ This is a [Flask](https://flask.palletsprojects.com/en/1.1.x/) app that serves a
 
 ## 💁‍♀️ How to use
 
+- Create a Virtual Environment `python -m venv venv`
+- Activate 'venv' Scripts `venv\Scripts\activate`
 - Install Python requirements `pip install -r requirements.txt`
-- Start the server for development `python3 main.py`
+- Start the server for development `python main.py`
