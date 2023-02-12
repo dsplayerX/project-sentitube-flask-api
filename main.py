@@ -60,23 +60,21 @@ def analyse():
         next_page_token = match["nextPageToken"] # if the video has less than 100 top level comments this returns a keyerror
     except:
         data = pd.DataFrame(comments, columns=["rawcomment"])
-        print(data)
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
         
     try:
-        while next_page_token and len(comments) < 1000: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
+        while next_page_token and len(comments) < 250: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
             match = get_comment_threads(youtube, video_id, next_page_token)
             next_page_token = match["nextPageToken"]  # if the video has less than 100 top level comments this returns a keyerror
             load_comments(match)
         data = pd.DataFrame(comments, columns=["rawcomment"])
-        print(data)
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
     except:
         data = pd.DataFrame(comments, columns=["rawcomment"])
-        print(data)
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
     data_dict = data.to_dict(orient="records")
+    print(data_dict)
     return jsonify(data_dict)
 
 @app.route('/results')
