@@ -6,6 +6,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from urllib.parse import urlparse # for formatting yt url
 import pickle
+import nltk
 
 from collections import defaultdict
 # NLTK for prerpcoessing
