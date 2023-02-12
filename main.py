@@ -15,6 +15,16 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
 
+# Download dependency
+for dependency in (
+    "punkt",
+    "stopwords",
+    "wordnet",
+    "porter_test",
+    "maxent_treebank_pos_tagger"
+):
+    nltk.download(dependency)
+
 # Loading environment variables from .env file
 load_dotenv()
 api_key = os.environ.get("API_KEY")
