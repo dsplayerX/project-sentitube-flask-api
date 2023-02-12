@@ -7,16 +7,13 @@ app = Flask(__name__)
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
     
-# Route for seeing a data
-@app.route('/data')
-def testdata():
-    # Returning an api for showing in json
-    return {
-        'Name':"geek", 
-        "Age":"22",
-        "Date":"x", 
-        "programming":"python"
-        }
+@app.route('/analyse')
+def index():
+    return jsonify({"Analyse Route"})
+
+@app.route('/results')
+def index():
+    return jsonify({"Results Route"})
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
