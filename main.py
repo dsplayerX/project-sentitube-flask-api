@@ -22,7 +22,7 @@ api_service_name = "youtube"
 api_version = "v3"
 
 # load saved sentiment model
-sentiment_model = pickle.load(open("models\sentiment-analysis-pipeline.pkl", "rb"))
+sentiment_model = pickle.load(open("models/sentiment-analysis-pipeline.pkl", "rb"))
 print("> Sentiment Model loaded successfully!")
 
 app = Flask(__name__)
