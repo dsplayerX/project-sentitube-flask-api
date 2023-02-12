@@ -9,12 +9,6 @@ import pickle
 import nltk
 
 from collections import defaultdict
-# NLTK for prerpcoessing
-from nltk.tokenize import word_tokenize
-from nltk import pos_tag
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import wordnet as wn
 
 # Download dependency
 for dependency in (
@@ -22,9 +16,17 @@ for dependency in (
     "stopwords",
     "wordnet",
     "porter_test",
-    "maxent_treebank_pos_tagger"
+    "maxent_treebank_pos_tagger",
+    "averaged_perceptron_tagger"
 ):
     nltk.download(dependency)
+
+# NLTK for prerpcoessing
+from nltk.tokenize import word_tokenize
+from nltk import pos_tag
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet as wn
 
 # Loading environment variables from .env file
 load_dotenv()
