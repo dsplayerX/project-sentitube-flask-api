@@ -15,8 +15,6 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
 
-nltk.download('punkt')
-
 # Loading environment variables from .env file
 load_dotenv()
 api_key = os.environ.get("API_KEY")
