@@ -3,6 +3,7 @@ import os
 from googleapiclient.discovery import build
 import pandas as pd
 from dotenv import load_dotenv
+from urllib.parse import urlparse # for formatting yt url
 
 # Loading environment variables from .env file
 load_dotenv()
@@ -20,7 +21,13 @@ def index():
 @app.route('/analyse')
 def analyse():
     # Youtube Video ID from URL
-    video_id = "doDUihpj6ro"
+        # enter youtube url here... 
+    youtube_url = "https://www.youtube.com/watch?v=38sG0OWPcRI"
+
+        # getting the video id from the youtube url
+    url_data = urlparse(youtube_url)
+    video_id = url_data.query[2::]
+    print("video_id: ", video_id)
 
     resourse = build('youtube','v3', developerKey = api_key)
 
