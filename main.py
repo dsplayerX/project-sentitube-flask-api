@@ -4,8 +4,9 @@ import os
 import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
-import joblib
 from urllib.parse import urlparse # for formatting yt url
+import pickle
+
 from collections import defaultdict
 # NLTK for prerpcoessing
 from nltk.tokenize import word_tokenize
@@ -14,16 +15,16 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
 
-from sklearn.feature_extraction.text import TfidfVectorizer
 # Loading environment variables from .env file
 load_dotenv()
 api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
 
-# load saved sarcasm model
-sarcasm_model = joblib.load("models/Sarcasm-LRM-Model.pkl")
-print("> Sarcasm Model loaded successfully!")
+# load saved sentiment model
+sentiment_model = pickle.load(open("models\sentiment-analysis-pipeline.pkl", "rb"))
+print("> Sentiment Model loaded successfully!")
+
 app = Flask(__name__)
 
 
@@ -116,10 +117,10 @@ def analyse():
         data.loc[index,'processed_text'] = str(Processed_text)
 
 
-    sarcasm_preds = sarcasm_model.predict(data["processed_text"])
+    sentiment_preds = sentiment_model.predict(data["processed_text"])
 
     # adding sarcasm predictions column to dataframe
-    data['sarcasm_predictions'] = sarcasm_preds
+    data['sentiment_predictions'] = sentiment_preds
 
     data_dict = data.to_dict(orient="records")
     print(data_dict)
