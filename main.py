@@ -1,6 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+import requests
 import os
-from googleapiclient.discovery import build
+import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
 from urllib.parse import urlparse # for formatting yt url
@@ -10,6 +11,7 @@ load_dotenv()
 api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
+
 
 app = Flask(__name__)
 
@@ -29,39 +31,55 @@ def analyse():
     video_id = url_data.query[2::]
     print("video_id: ", video_id)
 
-    resourse = build('youtube','v3', developerKey = api_key)
+    youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey = api_key)
+    comments = []
 
-    request = resourse.commentThreads().list(
-                                    part="snippet",
-                                    videoId=video_id,
-                                    maxResults=100,  # only returns 100 comments (even if this value was higher)
-                                    order="relevance")
+    # Function to load comments
+    def load_comments(match):
+        for item in match["items"]:
+            comment = item["snippet"]["topLevelComment"]
+            text = comment["snippet"]["textDisplay"]
+            comments.append(text)
 
-    response = request.execute()
+    # Function to get comments from subsequent comment pages
+    def get_comment_threads(youtube, video_id, nextPageToken):
+        results = youtube.commentThreads().list(
+            part="snippet",
+            maxResults=100,
+            videoId=video_id,
+            textFormat="plainText",
+            pageToken = nextPageToken
+        ).execute()
+        return results
 
-    items = response["items"]
+    try:
+        match = get_comment_threads(youtube, video_id, '')
+        load_comments(match)
+        next_page_token = match["nextPageToken"] # if the video has less than 100 top level comments this returns a keyerror
+    except:
+        data = pd.DataFrame(comments, columns=["rawcomment"])
+        data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+        
+    try:
+        while next_page_token and len(comments) < 1000: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
+            match = get_comment_threads(youtube, video_id, next_page_token)
+            next_page_token = match["nextPageToken"]  # if the video has less than 100 top level comments this returns a keyerror
+            load_comments(match)
+        data = pd.DataFrame(comments, columns=["rawcomment"])
+        data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+    except:
+        data = pd.DataFrame(comments, columns=["rawcomment"])
+        data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
-    data = []
-    for item in items:
-        item_info = item["snippet"]
-        topLevelComment = item_info["topLevelComment"]
-        comment_info = topLevelComment["snippet"]
-    
-        data.append({
-            "Comment By": comment_info["authorDisplayName"],
-            "Comment Text": comment_info["textDisplay"],
-            "Likes on Comment": comment_info["likeCount"],
-            "Comment Date": comment_info["publishedAt"]
-        })
-
-    df = pd.DataFrame(data)
-    df.to_csv("temp/temp_comments.csv", encoding="utf-8")
-    df = df.to_dict(orient="records")
-    return jsonify(df)
+    data_dict = data.to_dict(orient="records")
+    return jsonify(data_dict)
 
 @app.route('/results')
 def results():
-    return jsonify("Results Route")
+    response = requests.get("http://localhost:5000/analyse")
+    data = response.json()
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
