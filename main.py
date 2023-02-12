@@ -40,8 +40,9 @@ def analyse():
         for item in match["items"]:
             comment = item["snippet"]["topLevelComment"]
             text = comment["snippet"]["textDisplay"]
+            print(text)
             comments.append(text)
-
+            
     # Function to get comments from subsequent comment pages
     def get_comment_threads(youtube, video_id, nextPageToken):
         results = youtube.commentThreads().list(
@@ -59,7 +60,8 @@ def analyse():
         next_page_token = match["nextPageToken"] # if the video has less than 100 top level comments this returns a keyerror
     except:
         data = pd.DataFrame(comments, columns=["rawcomment"])
-        data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+        print(data)
+        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
         
     try:
         while next_page_token and len(comments) < 1000: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
@@ -67,10 +69,12 @@ def analyse():
             next_page_token = match["nextPageToken"]  # if the video has less than 100 top level comments this returns a keyerror
             load_comments(match)
         data = pd.DataFrame(comments, columns=["rawcomment"])
-        data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+        print(data)
+        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
     except:
         data = pd.DataFrame(comments, columns=["rawcomment"])
-        data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+        print(data)
+        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
     data_dict = data.to_dict(orient="records")
     return jsonify(data_dict)
