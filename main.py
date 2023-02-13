@@ -34,9 +34,14 @@ api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
 
-# load saved sentiment model
+# load saved sentiment analysis model
 sentiment_model = pickle.load(open("models/sentiment-analysis-pipeline.pkl", "rb"))
 print("> Sentiment Model loaded successfully!")
+
+# load saved sarcasm analysis model
+sarcasm_model = pickle.load(open("models/sarcasm-analysis-pipeline.pkl", "rb"))
+print("> Sarcasm Model loaded successfully!")
+
 
 app = Flask(__name__)
 
@@ -84,7 +89,7 @@ def analyse():
         load_comments(match)
         next_page_token = match["nextPageToken"] # if the video has less than 100 top level comments this returns a keyerror
     except:
-        data = pd.DataFrame(comments, columns=["rawcomment"])
+        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
         
     try:
@@ -92,22 +97,22 @@ def analyse():
             match = get_comment_threads(youtube, video_id, next_page_token)
             next_page_token = match["nextPageToken"]  # if the video has less than 100 top level comments this returns a keyerror
             load_comments(match)
-        data = pd.DataFrame(comments, columns=["rawcomment"])
+        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
     except:
-        data = pd.DataFrame(comments, columns=["rawcomment"])
+        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
     # copying rawcomments to a new column for preprocessing
-    data['processed_text'] = data['rawcomment']
+    comments_df['processed_text'] = comments_df['rawcomment']
     # Step - a : Remove blank rows if any.
-    data['processed_text'].dropna(inplace=True)
+    comments_df['processed_text'].dropna(inplace=True)
 
     # Step - b : Change all the text to lower case. This is required as python interprets 'dog' and 'DOG' differently
-    data['processed_text'] = [str(entry).lower() for entry in data['processed_text']]
+    comments_df['processed_text'] = [str(entry).lower() for entry in comments_df['processed_text']]
 
     # Step - c : Tokenization : In this each entry in the corpus will be broken into set of words
-    data['processed_text'] = [word_tokenize(entry) for entry in data['processed_text']]
+    comments_df['processed_text'] = [word_tokenize(entry) for entry in comments_df['processed_text']]
 
     # Step - d : Remove Stop words, Non-Numeric and perfom Word Stemming/Lemmenting.
     # WordNetLemmatizer requires Pos tags to understand if the word is noun or verb or adjective etc. By default it is set to Noun
@@ -115,7 +120,7 @@ def analyse():
     tag_map['J'] = wn.ADJ
     tag_map['V'] = wn.VERB
     tag_map['R'] = wn.ADV
-    for index,entry in enumerate(data['processed_text']):
+    for index,entry in enumerate(comments_df['processed_text']):
         # Declaring Empty List to store the words that follow the rules for this step
         Processed_text = []
         # Initializing WordNetLemmatizer()
@@ -127,21 +132,22 @@ def analyse():
                 word_Final = word_Lemmatized.lemmatize(word,tag_map[tag[0]])
                 Processed_text.append(word_Final)
         # The final processed set of words for each iteration will be stored in 'text_final'
-        data.loc[index,'processed_text'] = str(Processed_text)
+        comments_df.loc[index,'processed_text'] = str(Processed_text)
 
+    # adding sentiment and sarcasm predictions columns to dataframe
+    comments_df['sentiment_predictions'] = sentiment_model.predict(comments_df["processed_text"])
+    comments_df['sarcasm_predictions'] = sarcasm_model.predict(comments_df["processed_text"])
 
-    sentiment_preds = sentiment_model.predict(data["processed_text"])
+    # copying the dataframe and dropping the column used for preprocessing
+    processed_df = comments_df.copy()
+    processed_df = processed_df.drop(['processed_text'], axis=1)
 
-    # adding sarcasm predictions column to dataframe
-    data['sentiment_predictions'] = sentiment_preds
-
-    data_dict = data.to_dict(orient="records")
-    print(data_dict)
-    return jsonify(data_dict)
+    processed_df_dict = processed_df.to_dict(orient="records")
+    return jsonify(processed_df_dict)
 
 @app.route('/results')
 def results():
-    response = requests.get("http://localhost:5000/analyse")
+    response = requests.get("http://0.0.0.0:5000/analyse")
     data = response.json()
     return jsonify(data)
 
