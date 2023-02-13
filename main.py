@@ -70,7 +70,7 @@ def analyse():
         for item in match["items"]:
             comment = item["snippet"]["topLevelComment"]
             text = comment["snippet"]["textDisplay"]
-            print(text)
+            # print(text)
             comments.append(text)
             
     # Function to get comments from subsequent comment pages
@@ -103,6 +103,8 @@ def analyse():
         comments_df = pd.DataFrame(comments, columns=["rawcomment"])
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
+    print("Comments fetched successfully.")
+
     # copying rawcomments to a new column for preprocessing
     comments_df['processed_text'] = comments_df['rawcomment']
     # Step - a : Remove blank rows if any.
@@ -133,10 +135,14 @@ def analyse():
                 Processed_text.append(word_Final)
         # The final processed set of words for each iteration will be stored in 'text_final'
         comments_df.loc[index,'processed_text'] = str(Processed_text)
+    
+    print("Comments preprocessed successfully.")
 
     # adding sentiment and sarcasm predictions columns to dataframe
     comments_df['sentiment_predictions'] = sentiment_model.predict(comments_df["processed_text"])
     comments_df['sarcasm_predictions'] = sarcasm_model.predict(comments_df["processed_text"])
+
+    print("Sentiment and sarcasm was predicted successfully.")
 
     # copying the dataframe and dropping the column used for preprocessing
     processed_df = comments_df.copy()
