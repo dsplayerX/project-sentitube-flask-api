@@ -50,7 +50,7 @@ app = Flask(__name__)
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
     
-@app.route('/analyse')
+@app.route('/analyse',methods=['GET'])
 def analyse():
     # Youtube Video ID from URL
         # enter youtube url here... 
@@ -151,11 +151,32 @@ def analyse():
     processed_df_dict = processed_df.to_dict(orient="records")
     return jsonify(processed_df_dict)
 
-@app.route('/results')
+@app.route('/results' , methods=['GET'])
 def results():
-    response = requests.get("http://0.0.0.0:5000/analyse")
-    data = response.json()
-    return jsonify(data)
+    response = requests.get("http://localhost:5000/analyse")
+    newDict = response.json()
+
+    count = 0
+    count2 = 0
+    for d in newDict:
+        comment_count = (d['rawcomment'])
+        senti_count = d['sentiment_predictions']
+        sarc_count = d['sarcasm_predictions']
+
+        if  senti_count == 0 or senti_count == 1 or senti_count == 2:
+            count +=1
+        if  sarc_count == 0 or sarc_count == 1:
+            count2 +=1
+        
+  
+        
+
+    #return jsonify(newDict)
+    return {
+        'comment_count':comment_count[0],
+        'senti_count':count,
+        'sarc_count':count2
+    }
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
