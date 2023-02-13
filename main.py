@@ -155,27 +155,32 @@ def analyse():
 def results():
     response = requests.get("http://localhost:5000/analyse")
     newDict = response.json()
+    
 
-    count = 0
-    count2 = 0
+    test_all_senti_count = 0
+    test_all_sarc_count = 0
+
     for d in newDict:
-        comment_count = (d['rawcomment'])
-        senti_count = d['sentiment_predictions']
-        sarc_count = d['sarcasm_predictions']
+        #comment_count = (d['rawcomment'])
+        senti_count = d['sentiment_predictions']    #all sentiment results
+        sarc_count = d['sarcasm_predictions']       #all sarcasm results
 
-        if  senti_count == 0 or senti_count == 1 or senti_count == 2:
-            count +=1
-        if  sarc_count == 0 or sarc_count == 1:
-            count2 +=1
+        if  senti_count == 0 or senti_count == 1 or senti_count == 2:   #calculate all sentiment results
+            test_all_senti_count +=1
+        if  test_all_sarc_count == 0 or sarc_count == 1:                #calculate all sarcasm results
+            test_all_sarc_count +=1
         
-  
-        
+    comments_list = []  #list for store all comments
+    for d in newDict:
+        if 'rawcomment' in d:
+            comments_list.append(d['rawcomment'])
 
+        
     #return jsonify(newDict)
     return {
-        'comment_count':comment_count[0],
-        'senti_count':count,
-        'sarc_count':count2
+        'Comments_list':comments_list,
+        'Senti_count':test_all_senti_count,
+        'Sarc_count':test_all_sarc_count
     }
 
 if __name__ == '__main__':
