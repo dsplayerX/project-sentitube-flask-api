@@ -148,7 +148,7 @@ def analyse():
     processed_df = comments_df.copy()
     processed_df = processed_df.drop(['processed_text'], axis=1)
 
-    processed_df_dict = processed_df.to_dict(orient="records")
+    processed_df_dict = processed_df.to_dict(orient="index")
     return jsonify(processed_df_dict)
 
 @app.route('/results' , methods=['GET'])
@@ -156,34 +156,28 @@ def results():
 
     youtube_url = request.args.get('userinput', default = "", type = str) # this is used to get the youtube_url with get method
     response = requests.get("http://localhost:5000/analyse?userinput=" + youtube_url) #the analyse method is called with the userinput (yt url) to get analysis reuslts
-    newDict = response.json()
+    df = pd.DataFrame.from_dict(response.json(), orient="index")
+    print(df)
+    total_comments = int(df.shape[0])
+    # counts from sentiment analysis
+    positive_count = int((df['sentiment_predictions'] == 2).sum())
+    neutral_count = int((df['sentiment_predictions'] == 1).sum())
+    negative_count = int((df['sentiment_predictions'] == 0).sum())
+    #counts from sarcasm analysis
+    sarcastic_count = int((df['sarcasm_predictions'] == 1).sum())
+    nonsarcastic_count = int((df['sarcasm_predictions'] == 0).sum())
     
-
-    test_all_senti_count = 0
-    test_all_sarc_count = 0
-
-    for d in newDict:
-        #comment_count = (d['rawcomment'])
-        senti_count = d['sentiment_predictions']    #all sentiment results
-        sarc_count = d['sarcasm_predictions']       #all sarcasm results
-
-        if  senti_count == 0 or senti_count == 1 or senti_count == 2:   #calculate all sentiment results
-            test_all_senti_count +=1
-        if  test_all_sarc_count == 0 or sarc_count == 1:                #calculate all sarcasm results
-            test_all_sarc_count +=1
-        
-    comments_list = []  #list for store all comments
-    for d in newDict:
-        if 'rawcomment' in d:
-            comments_list.append(d['rawcomment'])
-
-        
+    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
     #return jsonify(newDict)
-    return {
-        'Comments_list':comments_list,
-        'Senti_count':test_all_senti_count,
-        'Sarc_count':test_all_sarc_count
+    results = {
+        'Total Comments':total_comments,
+        'Positve Comments':positive_count,
+        'Neutral Comments':neutral_count,
+        'Negative Comments':negative_count,
+        'Sarcastic Comments':sarcastic_count,
+        'Nonsarcastic Comments':nonsarcastic_count
     }
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
