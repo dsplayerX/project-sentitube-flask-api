@@ -54,7 +54,7 @@ def index():
 def analyse():
     # Youtube Video ID from URL
         # enter youtube url here... 
-    youtube_url = "https://www.youtube.com/watch?v=38sG0OWPcRI"
+    youtube_url = request.args.get('userinput', default = "", type = str)
 
         # getting the video id from the youtube url
     url_data = urlparse(youtube_url)
@@ -153,7 +153,9 @@ def analyse():
 
 @app.route('/results' , methods=['GET'])
 def results():
-    response = requests.get("http://localhost:5000/analyse")
+
+    youtube_url = request.args.get('userinput', default = "", type = str) # this is used to get the youtube_url with get method
+    response = requests.get("http://localhost:5000/analyse?userinput=" + youtube_url) #the analyse method is called with the userinput (yt url) to get analysis reuslts
     newDict = response.json()
     
 
