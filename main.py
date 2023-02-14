@@ -58,7 +58,8 @@ def analyse():
 
         # getting the video id from the youtube url
     url_data = urlparse(youtube_url)
-    video_id = url_data.query[2::]
+    #video_id = url_data.query[2::]
+    video_id = '32RAq6JzY-w'
     print("video_id: ", video_id)
 
     youtube = googleapiclient.discovery.build(
@@ -173,16 +174,24 @@ def results():
             test_all_sarc_count +=1
         
     comments_list = []  #list for store all comments
+    sentiment_list = []  #list for store all comments
+    sarcasm_list = []  #list for store all comments
+
     for d in newDict:
         if 'rawcomment' in d:
             comments_list.append(d['rawcomment'])
+        if 'sentiment_predictions' in d:
+            sentiment_list.append(d['sentiment_predictions'])
+        if 'sarcasm_predictions'in d:
+            sarcasm_list.append(d['sarcasm_predictions'])    
+            
 
         
     #return jsonify(newDict)
     return {
         'Comments_list':comments_list,
-        'Senti_count':test_all_senti_count,
-        'Sarc_count':test_all_sarc_count
+        'Sentiment_list':sentiment_list,
+        'Sarcasm_list':sarcasm_list
     }
 
 if __name__ == '__main__':
