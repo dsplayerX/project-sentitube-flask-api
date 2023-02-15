@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from urllib.parse import urlparse # for formatting yt url
 import pickle
 import nltk
+from flask_cors import CORS
 
 from collections import defaultdict
 
@@ -44,7 +45,7 @@ print("> Sarcasm Model loaded successfully!")
 
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route('/')
 def index():
