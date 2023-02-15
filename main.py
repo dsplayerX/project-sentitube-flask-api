@@ -168,6 +168,7 @@ def results():
     nonsarcastic_count = int((df['sarcasm_predictions'] == 0).sum())
     
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
+    # comments_dict = df["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
     results = {
         'Total Comments':total_comments,
@@ -177,7 +178,7 @@ def results():
         'Sarcastic Comments':sarcastic_count,
         'Nonsarcastic Comments':nonsarcastic_count
     }
-    return jsonify(results)
+    return (results)
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
