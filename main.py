@@ -1,13 +1,14 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request # redirect, url_for
+from flask_cors import CORS
 import requests
 import os
 import googleapiclient.discovery
 import pandas as pd
 from dotenv import load_dotenv
-from urllib.parse import urlparse # for formatting yt url
+from urllib.parse import urlparse, parse_qs # for formatting yt url
 import pickle
 import nltk
-from flask_cors import CORS
+
 
 from collections import defaultdict
 
@@ -50,23 +51,120 @@ CORS(app)
 @app.route('/')
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
-    
-@app.route('/analyse',methods=['GET'])
-def analyse():
-    # Youtube Video ID from URL
-        # enter youtube url here... 
-    youtube_url = request.args.get('userinput', default = "", type = str)
 
-        # getting the video id from the youtube url
+@app.route('/analysisresults', methods=['GET'])
+def analysisresults():
+    # Getting the UserInput
+    user_input = request.args.get('userinput', default = "", type = str)
+
+    yt_url = validatelink(user_input)
+    vid_id = get_video_id(yt_url)
+    fetched_comments = fetchcomments(vid_id)
+    processed_comments = preprocess(fetched_comments)
+    predicted_comments= predict(processed_comments)
+
+    total_comments = int(predicted_comments.shape[0])
+    # counts from sentiment analysis
+    positive_count = int((predicted_comments['sentiment_predictions'] == 2).sum())
+    neutral_count = int((predicted_comments['sentiment_predictions'] == 1).sum())
+    negative_count = int((predicted_comments['sentiment_predictions'] == 0).sum())
+    #counts from sarcasm analysis
+    sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
+    nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
+    
+    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
+    # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
+    #return jsonify(newDict)
+    results = {
+        'Total Comments':total_comments,
+        'Positve Comments':positive_count,
+        'Neutral Comments':neutral_count,
+        'Negative Comments':negative_count,
+        'Sarcastic Comments':sarcastic_count,
+        'Nonsarcastic Comments':nonsarcastic_count
+    }
+    return (results)
+
+
+@app.route('/percomment_results' , methods=['GET'])
+def percomment_results():
+    # Getting the UserInput
+    user_input = request.args.get('userinput', default = "", type = str)
+
+    yt_url = validatelink(user_input)
+    vid_id = get_video_id(yt_url)
+    fetched_comments = fetchcomments(vid_id)
+    processed_comments = preprocess(fetched_comments)
+    predicted_comments= predict(processed_comments)
+    
+    predicted_comments_dict = predicted_comments.to_dict(orient="index")
+
+    return jsonify(predicted_comments_dict)
+
+
+# GLOBAL FUNCTIONS
+def validatelink(user_input):
+    
+
+    ### OLD VALIDATION
+    # # Function for validating the URL (is a valid URL or not?)
+    # def is_url(url):
+    #     try:
+    #         result = urlparse(url)
+    #         return all([result.scheme, result.netloc])
+    #     except ValueError:
+    #         return False
+
+    # # Validating the user input to see if it's a valid URL
+    # if (is_url(user_input)):
+    #     print("Valid URL")
+    # else:
+    #     print("Invalid URL")
+    #     return ("Please enter a valid URL.")
+
+    # Function for validing whether a url is from YouTube domain or not
+    def is_valid_youtube_url(url):
+        youtube_hostnames = ("www.youtube.com", "youtube.com", "m.youtube.com", "youtu.be")
+        parsed_url = urlparse(url)
+        # print(parsed_url)
+        if parsed_url.hostname in youtube_hostnames:
+            query_params = parse_qs(parsed_url.query)
+            # print(query_params)
+            # checks whether the URL contains a common "v" parameter in its query string or starts with the "/embed/" path
+            if "v" in query_params:
+                return True
+            elif parsed_url.path.startswith("/embed/"):
+                return True
+        return False
+    
+    # Validating the user_input to check if it's a YouTube URL or not
+    if user_input and is_valid_youtube_url(user_input):
+        print("User input is a valid YouTube URL")
+    else:
+        return ("Please enter a valid URL.")
+        # FIND A WAY FOR THIS EXCEPTION TO BE HANDLEDDD!!!!
+    
+    # If all the validations are passed, the user_input is assigned as the youtube_url to extract the video id
+    youtube_url = user_input
+    print("Valid YouTube URL entered.")
+    return youtube_url
+
+
+def get_video_id(youtube_url):
+    # Extracting the Video ID from the YouTube URL
     url_data = urlparse(youtube_url)
     video_id = url_data.query[2::]
-    print("video_id: ", video_id)
 
+    print("YouTube Video_ID: ", video_id)
+    return video_id
+
+
+def fetchcomments(video_id):
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey = api_key)
     comments = []
 
-    # Function to load comments
+    # Function to load comments and append necessary details to the comments array
     def load_comments(match):
         for item in match["items"]:
             comment = item["snippet"]["topLevelComment"]
@@ -105,7 +203,13 @@ def analyse():
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
     print("Comments fetched successfully.")
+    # print(comments_df)
+    comments_df_dict = comments_df.to_dict(orient="index")
+    return comments_df_dict
 
+
+def preprocess(comments_df_dict):
+    comments_df = pd.DataFrame.from_dict(comments_df_dict, orient="index")
     # copying rawcomments to a new column for preprocessing
     comments_df['processed_text'] = comments_df['rawcomment']
     # Step - a : Remove blank rows if any.
@@ -139,47 +243,22 @@ def analyse():
     
     print("Comments preprocessed successfully.")
 
+    return comments_df
+
+def predict(comments_df):
     # adding sentiment and sarcasm predictions columns to dataframe
     comments_df['sentiment_predictions'] = sentiment_model.predict(comments_df["processed_text"])
+    print("Sentiments predicted successfully.")
+
     comments_df['sarcasm_predictions'] = sarcasm_model.predict(comments_df["processed_text"])
+    print("Sarcasm predicted successfully.")
 
-    print("Sentiment and sarcasm was predicted successfully.")
+    # copying the dataframe and dropping the column used in preprocessing
+    predicted_df = comments_df.copy()
+    predicted_df = predicted_df.drop(['processed_text'], axis=1)
 
-    # copying the dataframe and dropping the column used for preprocessing
-    processed_df = comments_df.copy()
-    processed_df = processed_df.drop(['processed_text'], axis=1)
+    return predicted_df
 
-    processed_df_dict = processed_df.to_dict(orient="index")
-    return jsonify(processed_df_dict)
-
-@app.route('/results' , methods=['GET'])
-def results():
-
-    youtube_url = request.args.get('userinput', default = "", type = str) # this is used to get the youtube_url with get method
-    response = requests.get("http://localhost:5000/analyse?userinput=" + youtube_url) #the analyse method is called with the userinput (yt url) to get analysis reuslts
-    df = pd.DataFrame.from_dict(response.json(), orient="index")
-    print(df)
-    total_comments = int(df.shape[0])
-    # counts from sentiment analysis
-    positive_count = int((df['sentiment_predictions'] == 2).sum())
-    neutral_count = int((df['sentiment_predictions'] == 1).sum())
-    negative_count = int((df['sentiment_predictions'] == 0).sum())
-    #counts from sarcasm analysis
-    sarcastic_count = int((df['sarcasm_predictions'] == 1).sum())
-    nonsarcastic_count = int((df['sarcasm_predictions'] == 0).sum())
-    
-    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
-    # comments_dict = df["rawcomment"].to_dict(orient="index")
-    #return jsonify(newDict)
-    results = {
-        'Total Comments':total_comments,
-        'Positve Comments':positive_count,
-        'Neutral Comments':neutral_count,
-        'Negative Comments':negative_count,
-        'Sarcastic Comments':sarcastic_count,
-        'Nonsarcastic Comments':nonsarcastic_count
-    }
-    return (results)
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
