@@ -59,7 +59,7 @@ def analysisresults():
 
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id)
+    fetched_comments = fetchcomments(vid_id, 250)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
 
@@ -76,14 +76,14 @@ def analysisresults():
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
     results = {
-        'Total Comments':total_comments,
         'Positve Comments':positive_count,
         'Neutral Comments':neutral_count,
         'Negative Comments':negative_count,
         'Sarcastic Comments':sarcastic_count,
-        'Nonsarcastic Comments':nonsarcastic_count
+        'Nonsarcastic Comments':nonsarcastic_count,
+        'Total Comments':total_comments
     }
-    return (results)
+    return jsonify(results)
 
 
 @app.route('/percomment_results' , methods=['GET'])
@@ -93,7 +93,7 @@ def percomment_results():
 
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id)
+    fetched_comments = fetchcomments(vid_id, 250)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     
@@ -101,6 +101,38 @@ def percomment_results():
 
     return jsonify(predicted_comments_dict)
 
+@app.route('/extensionresults', methods=['GET'])
+def extensionresults():
+    # Getting the UserInput
+    user_input = request.args.get('userinput', default = "", type = str)
+
+    yt_url = validatelink(user_input)
+    vid_id = get_video_id(yt_url)
+    fetched_comments = fetchcomments(vid_id, 500)
+    processed_comments = preprocess(fetched_comments)
+    predicted_comments= predict(processed_comments)
+
+    total_comments = int(predicted_comments.shape[0])
+    # counts from sentiment analysis
+    positive_count = int((predicted_comments['sentiment_predictions'] == 2).sum())
+    neutral_count = int((predicted_comments['sentiment_predictions'] == 1).sum())
+    negative_count = int((predicted_comments['sentiment_predictions'] == 0).sum())
+    #counts from sarcasm analysis
+    sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
+    nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
+    
+    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
+    # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
+    #return jsonify(newDict)
+    results = {
+        'Positve Comments':positive_count,
+        'Neutral Comments':neutral_count,
+        'Negative Comments':negative_count,
+        'Sarcastic Comments':sarcastic_count,
+        'Nonsarcastic Comments':nonsarcastic_count,
+        'Total Comments':total_comments
+    }
+    return jsonify(results)
 
 # GLOBAL FUNCTIONS
 def validatelink(user_input):
@@ -159,7 +191,7 @@ def get_video_id(youtube_url):
     return video_id
 
 
-def fetchcomments(video_id):
+def fetchcomments(video_id, no_of_comments):
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey = api_key)
     comments = []
@@ -192,7 +224,7 @@ def fetchcomments(video_id):
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
         
     try:
-        while next_page_token and len(comments) < 250: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
+        while next_page_token and len(comments) < no_of_comments: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
             match = get_comment_threads(youtube, video_id, next_page_token)
             next_page_token = match["nextPageToken"]  # if the video has less than 100 top level comments this returns a keyerror
             load_comments(match)
