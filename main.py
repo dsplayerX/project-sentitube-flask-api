@@ -163,46 +163,55 @@ def results():
     test_all_senti_count = 0
     test_all_sarc_count = 0
 
-    for d in newDict:
-        #comment_count = (d['rawcomment'])
-        senti_comm = d['sentiment_predictions'].tolist()    #all sentiment results
-        sarc_comm = d['sarcasm_predictions'].tolist()       #all sarcasm results
-        senti_positive_count = 0
-        senti_negative_count = 0
-        senti_nural_count = 0
-
-        #if  senti_count == 0 or senti_count == 1 or senti_count == 2:   #calculate all sentiment results
-        #    test_all_senti_count +=1
-        #if  test_all_sarc_count == 0 or sarc_count == 1:                #calculate all sarcasm results
-        #    test_all_sarc_count +=1
         
-    for value in senti_comm:
-        if(value == 0):
-            senti_positive_count = senti_positive_count+1
-        elif(value == 1):
-            senti_negative_count = senti_negative_count + 1
-        elif(value == 2):
-              senti_nural_count = senti_nural_count + 1      
-
     comments_list = []  #list for store all comments
-    sentiment_list = []  #list for store all comments
-    sarcasm_list = []  #list for store all comments
+    senti_comm = []  #list for store all comments
+    sarc_comm = []  #list for store all comments
 
     for d in newDict:
         if 'rawcomment' in d:
             comments_list.append(d['rawcomment'])
         if 'sentiment_predictions' in d:
-            sentiment_list.append(d['sentiment_predictions'])
+            senti_comm.append(d['sentiment_predictions'])
         if 'sarcasm_predictions'in d:
-            sarcasm_list.append(d['sarcasm_predictions'])    
+            sarc_comm.append(d['sarcasm_predictions'])    
+
+    senti_positive_count = 0
+    senti_negative_count = 0
+    senti_nural_count = 0
+    final_statues = 0
+
+    for value in range(len(senti_comm)):
+        for value2 in range(len(sarc_comm)):
             
+            if(senti_comm[value] == 0 and sarc_comm[value2] == 0):
+                 senti_negative_count = senti_negative_count + 1
+                 break
+            elif(senti_comm[value] == 0 and sarc_comm[value2] == 1):
+                 senti_nural_count = senti_nural_count + 1 
+                 break
+            elif(senti_comm[value] == 1 and sarc_comm[value2] == 0):
+                 senti_nural_count = senti_nural_count + 1
+                 break
+            elif(senti_comm[value] == 1 and sarc_comm[value2] == 1):
+                 senti_negative_count = senti_negative_count + 1 
+                 break
+            elif(senti_comm[value] == 2 and sarc_comm[value2] == 0):
+                 senti_positive_count = senti_positive_count + 1
+                 break
+            elif(senti_comm[value] == 2 and sarc_comm[value2] == 1):
+                 senti_nural_count = senti_nural_count + 1  
+                 break
+
+        final_statues = final_statues + 1       
 
         
     #return jsonify(newDict)
     return {
-        'Comments_list':comments_list,
-        'Sentiment_list':sentiment_list,
-        'Sarcasm_list':sarcasm_list
+        'Senti_negative_count':senti_negative_count,
+        'Senti_nural_count':senti_nural_count,
+        'Senti_positive_count':senti_positive_count,
+        'Final_statues' : final_statues
     }
 
 if __name__ == '__main__':
