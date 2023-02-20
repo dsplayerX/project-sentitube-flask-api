@@ -165,14 +165,25 @@ def results():
 
     for d in newDict:
         #comment_count = (d['rawcomment'])
-        senti_count = d['sentiment_predictions']    #all sentiment results
-        sarc_count = d['sarcasm_predictions']       #all sarcasm results
+        senti_comm = d['sentiment_predictions'].tolist()    #all sentiment results
+        sarc_comm = d['sarcasm_predictions'].tolist()       #all sarcasm results
+        senti_positive_count = 0
+        senti_negative_count = 0
+        senti_nural_count = 0
 
-        if  senti_count == 0 or senti_count == 1 or senti_count == 2:   #calculate all sentiment results
-            test_all_senti_count +=1
-        if  test_all_sarc_count == 0 or sarc_count == 1:                #calculate all sarcasm results
-            test_all_sarc_count +=1
+        #if  senti_count == 0 or senti_count == 1 or senti_count == 2:   #calculate all sentiment results
+        #    test_all_senti_count +=1
+        #if  test_all_sarc_count == 0 or sarc_count == 1:                #calculate all sarcasm results
+        #    test_all_sarc_count +=1
         
+    for value in senti_comm:
+        if(value == 0):
+            senti_positive_count = senti_positive_count+1
+        elif(value == 1):
+            senti_negative_count = senti_negative_count + 1
+        elif(value == 2):
+              senti_nural_count = senti_nural_count + 1      
+
     comments_list = []  #list for store all comments
     sentiment_list = []  #list for store all comments
     sarcasm_list = []  #list for store all comments
