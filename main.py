@@ -165,10 +165,10 @@ def results():
 
         
     comments_list = []  #list for store all comments
-    senti_comm = []  #list for store all comments
-    sarc_comm = []  #list for store all comments
+    senti_comm = []  #list for store all sentiment predictions
+    sarc_comm = []  #list for store all sarcasm predictions
 
-    for d in newDict:
+    for d in newDict:   # store all details in to relevent lists.
         if 'rawcomment' in d:
             comments_list.append(d['rawcomment'])
         if 'sentiment_predictions' in d:
@@ -176,30 +176,31 @@ def results():
         if 'sarcasm_predictions'in d:
             sarc_comm.append(d['sarcasm_predictions'])    
 
-    senti_positive_count = 0
-    senti_negative_count = 0
-    senti_nural_count = 0
-    final_statues = 0
+    senti_positive_count = 0    # final positive comments count
+    senti_negative_count = 0    # final negative comments count
+    senti_nural_count = 0       # final nural comments count
+    final_statues = 0           # all comments count
 
+    # useing a nested for loop 
     for value in range(len(senti_comm)):
         for value2 in range(len(sarc_comm)):
             
-            if(senti_comm[value] == 0 and sarc_comm[value2] == 0):
+            if(senti_comm[value] == 0 and sarc_comm[value2] == 0):  # negative + non sarcasm = negative
                  senti_negative_count = senti_negative_count + 1
                  break
-            elif(senti_comm[value] == 0 and sarc_comm[value2] == 1):
+            elif(senti_comm[value] == 0 and sarc_comm[value2] == 1): # negative + sarcasm = nural
                  senti_nural_count = senti_nural_count + 1 
                  break
-            elif(senti_comm[value] == 1 and sarc_comm[value2] == 0):
+            elif(senti_comm[value] == 1 and sarc_comm[value2] == 0): # nural + non sarcasm = nural
                  senti_nural_count = senti_nural_count + 1
                  break
-            elif(senti_comm[value] == 1 and sarc_comm[value2] == 1):
+            elif(senti_comm[value] == 1 and sarc_comm[value2] == 1): # nural + sarcasm = nural
                  senti_negative_count = senti_negative_count + 1 
                  break
-            elif(senti_comm[value] == 2 and sarc_comm[value2] == 0):
+            elif(senti_comm[value] == 2 and sarc_comm[value2] == 0): # positive + non sarcasm = positive
                  senti_positive_count = senti_positive_count + 1
                  break
-            elif(senti_comm[value] == 2 and sarc_comm[value2] == 1):
+            elif(senti_comm[value] == 2 and sarc_comm[value2] == 1): # positive + sarcasm = nural
                  senti_nural_count = senti_nural_count + 1  
                  break
 
