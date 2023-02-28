@@ -46,18 +46,24 @@ print("> Sarcasm Model loaded successfully!")
 
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
 
 @app.route('/')
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
 
-@app.route('/analysisresults', methods=['GET'])
+@app.route('/analysisresults', methods=['POST'])
 def analysisresults():
     # Getting the UserInput
-    user_input = request.args.get('userinput', default = "", type = str)
-
+    # user_input = request.args.get('userinput', default = "", type = str)
+    data = request.get_json()
+    user_input = data["userinput"]
+    print("User-Input: ", user_input)
     yt_url = validatelink(user_input)
+    if yt_url == "INVALID URL":
+        return ("Invalid URL")
     vid_id = get_video_id(yt_url)
     fetched_comments = fetchcomments(vid_id, 250)
     processed_comments = preprocess(fetched_comments)
@@ -167,13 +173,16 @@ def validatelink(user_input):
                 return True
             elif parsed_url.path.startswith("/embed/"):
                 return True
-        return False
+            return False
+        else:
+            return False
     
     # Validating the user_input to check if it's a YouTube URL or not
     if user_input and is_valid_youtube_url(user_input):
-        print("User input is a valid YouTube URL")
+        print("User input is a Valid YouTube URL")
     else:
-        return ("Please enter a valid URL.")
+        print("User input is a INVALID YouTube URL")
+        return ("INVALID URL")
         # FIND A WAY FOR THIS EXCEPTION TO BE HANDLEDDD!!!!
     
     # If all the validations are passed, the user_input is assigned as the youtube_url to extract the video id
