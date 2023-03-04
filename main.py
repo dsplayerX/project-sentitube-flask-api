@@ -82,6 +82,8 @@ def testresults():
     senti_positive_count = int((predicted_comments['sentitube_results'] == 'positive').sum())
     senti_neutral_count = int((predicted_comments['sentitube_results'] == 'neutral').sum())
     senti_negative_count = int((predicted_comments['sentitube_results'] == 'negative').sum())
+    sentidiscard = int((predicted_comments['sentitube_results'] == 'discard').sum())
+
 
 
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
@@ -97,6 +99,7 @@ def testresults():
         'Sentitube Positve' :senti_positive_count,
         'Sentitube Neutral' :senti_neutral_count,
         'Sentitube Negative' :senti_negative_count,
+        'Discard': sentidiscard,
     }
     return jsonify(results)
 
@@ -353,9 +356,11 @@ def getsentituberesults(predicted_df):
      row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 1 else
     'neutral' if row['sentiment_predictions'] == 1 else
     'positive' if row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 0 else
-    'neutral'
+    'discard'
     ), axis=1)
     final_df = predicted_df.copy()
+    print(final_df)
+    final_df.to_csv('temp/temp_comments.csv')
     return final_df
 
 if __name__ == '__main__':
