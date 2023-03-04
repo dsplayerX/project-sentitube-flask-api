@@ -54,6 +54,52 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
 
+@app.route('/testresults', methods=['GET'])
+def testresults():
+    # Getting the UserInput
+    user_input = request.args.get('userinput', default = "", type = str)
+
+    print("User-Input: ", user_input)
+    yt_url = validatelink(user_input)
+    if yt_url == "INVALID URL":
+        return ("Invalid URL")
+    vid_id = get_video_id(yt_url)
+    fetched_comments = fetchcomments(vid_id, 250)
+    processed_comments = preprocess(fetched_comments)
+    predicted_comments= predict(processed_comments)
+    sentitube_comments= getsentituberesults(predicted_comments)
+
+
+    total_comments = int(predicted_comments.shape[0])
+    # counts from sentiment analysis
+    positive_count = int((predicted_comments['sentiment_predictions'] == 2).sum())
+    neutral_count = int((predicted_comments['sentiment_predictions'] == 1).sum())
+    negative_count = int((predicted_comments['sentiment_predictions'] == 0).sum())
+    #counts from sarcasm analysis
+    sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
+    nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
+    #counts from sentitube results
+    senti_positive_count = int((predicted_comments['sentitube_results'] == 'positive').sum())
+    senti_neutral_count = int((predicted_comments['sentitube_results'] == 'neutral').sum())
+    senti_negative_count = int((predicted_comments['sentitube_results'] == 'negative').sum())
+
+
+    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
+    # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
+    #return jsonify(newDict)
+    results = {
+        'Positive Comments':positive_count,
+        'Neutral Comments':neutral_count,
+        'Negative Comments':negative_count,
+        'Sarcastic Comments':sarcastic_count,
+        'Nonsarcastic Comments':nonsarcastic_count,
+        'Total Comments':total_comments,
+        'Sentitube Positve' :senti_positive_count,
+        'Sentitube Neutral' :senti_neutral_count,
+        'Sentitube Negative' :senti_negative_count,
+    }
+    return jsonify(results)
+
 @app.route('/analysisresults', methods=['POST'])
 def analysisresults():
     # Getting the UserInput
@@ -301,37 +347,17 @@ def predict(comments_df):
     return predicted_df
 
 def getsentituberesults(predicted_df):
-    # # useing a nested for loop 
-    # for value in range(len(senti_comm)):
-    #     for value2 in range(len(sarc_comm)):
-            
-    #         if(senti_comm[value] == 0 and sarc_comm[value2] == 0):  # negative + non sarcasm = negative
-    #              senti_negative_count = senti_negative_count + 1
-    #              break
-    #         elif(senti_comm[value] == 0 and sarc_comm[value2] == 1): # negative + sarcasm = nural
-    #              senti_nural_count = senti_nural_count + 1 
-    #              break
-    #         elif(senti_comm[value] == 1 and sarc_comm[value2] == 0): # nural + non sarcasm = nural
-    #              senti_nural_count = senti_nural_count + 1
-    #              break
-    #         elif(senti_comm[value] == 1 and sarc_comm[value2] == 1): # nural + sarcasm = nural
-    #              senti_negative_count = senti_negative_count + 1 
-    #              break
-    #         elif(senti_comm[value] == 2 and sarc_comm[value2] == 0): # positive + non sarcasm = positive
-    #              senti_positive_count = senti_positive_count + 1
-    #              break
-    #         elif(senti_comm[value] == 2 and sarc_comm[value2] == 1): # positive + sarcasm = nural
-    #              senti_nural_count = senti_nural_count + 1  
-    #              break
-    lambda row: (
-    'negative' if row['senti_comm'] == 0 and row['sarc_comm'] == 0 else
-    'nural' if row['senti_comm'] == 0 and row['sarc_comm'] == 1 or
-              row['senti_comm'] == 1 and row['sarc_comm'] == 0 or
-              row['senti_comm'] == 1 and row['sarc_comm'] == 1 else
-    'positive' if row['senti_comm'] == 2 and row['sarc_comm'] == 0 else
-    'nural' # if row['senti_comm'] == 2 and row['sarc_comm'] == 1
-    )
-    return
+
+    predicted_df['sentitube_results'] = predicted_df.apply(lambda row: (
+    'negative' if row['sentiment_predictions'] == 0 and row['sarcasm_predictions'] == 0 else
+    'neutral' if row['sentiment_predictions'] == 0 and row['sarcasm_predictions'] == 1 or
+              row['sentiment_predictions'] == 1 and row['sarcasm_predictions'] == 0 or
+              row['sentiment_predictions'] == 1 and row['sarcasm_predictions'] == 1 else
+    'positive' if row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 0 else
+    'neutral' # if row['senti_comm'] == 2 and row['sarc_comm'] == 1
+    ), axis=1)
+    final_df = predicted_df.copy()
+    return final_df
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
