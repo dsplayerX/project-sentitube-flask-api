@@ -301,7 +301,36 @@ def predict(comments_df):
     return predicted_df
 
 def getsentituberesults(predicted_df):
-    
+    # # useing a nested for loop 
+    # for value in range(len(senti_comm)):
+    #     for value2 in range(len(sarc_comm)):
+            
+    #         if(senti_comm[value] == 0 and sarc_comm[value2] == 0):  # negative + non sarcasm = negative
+    #              senti_negative_count = senti_negative_count + 1
+    #              break
+    #         elif(senti_comm[value] == 0 and sarc_comm[value2] == 1): # negative + sarcasm = nural
+    #              senti_nural_count = senti_nural_count + 1 
+    #              break
+    #         elif(senti_comm[value] == 1 and sarc_comm[value2] == 0): # nural + non sarcasm = nural
+    #              senti_nural_count = senti_nural_count + 1
+    #              break
+    #         elif(senti_comm[value] == 1 and sarc_comm[value2] == 1): # nural + sarcasm = nural
+    #              senti_negative_count = senti_negative_count + 1 
+    #              break
+    #         elif(senti_comm[value] == 2 and sarc_comm[value2] == 0): # positive + non sarcasm = positive
+    #              senti_positive_count = senti_positive_count + 1
+    #              break
+    #         elif(senti_comm[value] == 2 and sarc_comm[value2] == 1): # positive + sarcasm = nural
+    #              senti_nural_count = senti_nural_count + 1  
+    #              break
+    lambda row: (
+    'negative' if row['senti_comm'] == 0 and row['sarc_comm'] == 0 else
+    'nural' if row['senti_comm'] == 0 and row['sarc_comm'] == 1 or
+              row['senti_comm'] == 1 and row['sarc_comm'] == 0 or
+              row['senti_comm'] == 1 and row['sarc_comm'] == 1 else
+    'positive' if row['senti_comm'] == 2 and row['sarc_comm'] == 0 else
+    'nural' # if row['senti_comm'] == 2 and row['sarc_comm'] == 1
+    )
     return
 
 if __name__ == '__main__':
