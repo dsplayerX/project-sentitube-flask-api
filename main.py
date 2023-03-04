@@ -64,7 +64,7 @@ def testresults():
     if yt_url == "INVALID URL":
         return ("Invalid URL")
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 250)
+    fetched_comments = fetchcomments(vid_id, 1000)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
@@ -84,7 +84,7 @@ def testresults():
     senti_negative_count = int((predicted_comments['sentitube_results'] == 'negative').sum())
 
 
-    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
+    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
     results = {
@@ -349,12 +349,11 @@ def predict(comments_df):
 def getsentituberesults(predicted_df):
 
     predicted_df['sentitube_results'] = predicted_df.apply(lambda row: (
-    'negative' if row['sentiment_predictions'] == 0 and row['sarcasm_predictions'] == 0 else
-    'neutral' if row['sentiment_predictions'] == 0 and row['sarcasm_predictions'] == 1 or
-              row['sentiment_predictions'] == 1 and row['sarcasm_predictions'] == 0 or
-              row['sentiment_predictions'] == 1 and row['sarcasm_predictions'] == 1 else
+    'negative' if row['sentiment_predictions'] == 0 or
+     row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 1 else
+    'neutral' if row['sentiment_predictions'] == 1 else
     'positive' if row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 0 else
-    'neutral' # if row['senti_comm'] == 2 and row['sarc_comm'] == 1
+    'neutral'
     ), axis=1)
     final_df = predicted_df.copy()
     return final_df
