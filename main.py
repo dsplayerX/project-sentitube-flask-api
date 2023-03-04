@@ -82,7 +82,7 @@ def analysisresults():
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
     results = {
-        'Positve Comments':positive_count,
+        'Positive Comments':positive_count,
         'Neutral Comments':neutral_count,
         'Negative Comments':negative_count,
         'Sarcastic Comments':sarcastic_count,
@@ -114,7 +114,7 @@ def extensionresults():
 
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 500)
+    fetched_comments = fetchcomments(vid_id, 200)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
 
@@ -131,7 +131,7 @@ def extensionresults():
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
     results = {
-        'Positve Comments':positive_count,
+        'Positive Comments':positive_count,
         'Neutral Comments':neutral_count,
         'Negative Comments':negative_count,
         'Sarcastic Comments':sarcastic_count,
