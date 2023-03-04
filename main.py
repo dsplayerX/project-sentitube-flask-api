@@ -300,6 +300,9 @@ def predict(comments_df):
 
     return predicted_df
 
+def getsentituberesults(predicted_df):
+    
+    return
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
