@@ -65,6 +65,7 @@ def analysisresults():
     if yt_url == "INVALID URL":
         return ("Invalid URL")
     vid_id = get_video_id(yt_url)
+    print("YouTube Video_ID: ", vid_id)
     fetched_comments = fetchcomments(vid_id, 250)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
@@ -193,11 +194,19 @@ def validatelink(user_input):
 
 def get_video_id(youtube_url):
     # Extracting the Video ID from the YouTube URL
-    url_data = urlparse(youtube_url)
-    video_id = url_data.query[2::]
+    # url_data = urlparse(youtube_url)
+    # video_id = url_data.query[2::]
+    youtube_hostnames = ("www.youtube.com", "youtube.com", "m.youtube.com", "youtu.be")
+    parsed_url = urlparse(youtube_url)
+    if parsed_url.hostname in youtube_hostnames:
+        query_params = parse_qs(parsed_url.query)
+        if "v" in query_params:
+            return query_params["v"][0]
+        elif parsed_url.path.startswith("/embed/"):
+            return parsed_url.path.split("/")[-1]
+    return None
 
-    print("YouTube Video_ID: ", video_id)
-    return video_id
+    # return video_id
 
 
 def fetchcomments(video_id, no_of_comments):
@@ -245,12 +254,12 @@ def fetchcomments(video_id, no_of_comments):
 
     print("Comments fetched successfully.")
     # print(comments_df)
-    comments_df_dict = comments_df.to_dict(orient="index")
-    return comments_df_dict
+    # comments_df_dict = comments_df.to_dict(orient="index")
+    return comments_df
 
 
-def preprocess(comments_df_dict):
-    comments_df = pd.DataFrame.from_dict(comments_df_dict, orient="index")
+def preprocess(comments_df):
+    # comments_df = pd.DataFrame.from_dict(comments_df_dict, orient="index")
     # copying rawcomments to a new column for preprocessing
     comments_df['processed_text'] = comments_df['rawcomment']
     # Step - a : Remove blank rows if any.
