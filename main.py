@@ -46,8 +46,8 @@ print("> Sarcasm Model loaded successfully!")
 
 
 app = Flask(__name__)
-# CORS(app)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app)
+#CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 
 @app.route('/')
