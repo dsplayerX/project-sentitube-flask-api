@@ -118,6 +118,10 @@ def analysisresults():
     fetched_comments = fetchcomments(vid_id, 250)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
+    sentitube_comments= getsentituberesults(predicted_comments)
+
+    final_comments_dict = sentitube_comments.to_dict(orient="index")
+
 
     total_comments = int(predicted_comments.shape[0])
     # counts from sentiment analysis
@@ -127,67 +131,57 @@ def analysisresults():
     #counts from sarcasm analysis
     sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
     nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
+    #counts from sentitube results
+    senti_positive_count = int((predicted_comments['sentitube_results'] == 'positive').sum())
+    senti_neutral_count = int((predicted_comments['sentitube_results'] == 'neutral').sum())
+    senti_negative_count = int((predicted_comments['sentitube_results'] == 'negative').sum())
 
-    positive_per = (positive_count/total_comments) * 100
-    negative_per = (negative_count/total_comments) * 100
-    final_per = 0
+    # calculating percenatages for custom feedback
+    check_percentage = lambda pos_per: \
+    1 if (pos_per == 0) \
+    else 2 if (pos_per > 0 and pos_per < 5) \
+    else 2 if (pos_per >= 5 and pos_per < 10) \
+    else 3 if (pos_per >= 10 and pos_per < 15) \
+    else 4 if (pos_per >= 15 and pos_per < 20) \
+    else 5 if (pos_per >= 20 and pos_per < 25) \
+    else 6 if (pos_per >= 25 and pos_per < 30) \
+    else 7 if (pos_per >= 30 and pos_per < 35) \
+    else 8 if (pos_per >= 35 and pos_per < 40) \
+    else 9 if (pos_per >= 40 and pos_per < 45) \
+    else 10 if (pos_per >= 45 and pos_per < 50) \
+    else 11 if (pos_per >= 50 and pos_per < 55) \
+    else 12 if (pos_per >= 55 and pos_per < 60) \
+    else 13 if (pos_per >= 60 and pos_per < 65) \
+    else 14 if (pos_per >= 65 and pos_per < 70) \
+    else 15 if (pos_per >= 70 and pos_per < 75) \
+    else 16 if (pos_per >= 75 and pos_per < 80) \
+    else 17 if (pos_per >= 80 and pos_per < 85) \
+    else 18 if (pos_per >= 85 and pos_per < 90) \
+    else 20 if (pos_per >= 90 and pos_per < 95) \
+    else 20 if (pos_per >= 95 and pos_per < 100) \
+    else 21 if (pos_per == 100) \
+    else 0 
 
-    check_percentage = lambda pos_per, neg_per: \
-    1 if (pos_per >= 0 and neg_per < 100) \
-    else 2 if (pos_per >= 5 and neg_per < 95) \
-    else 3 if (pos_per >= 10 and neg_per < 90) \
-    else 4 if (pos_per >= 15 and neg_per < 85) \
-    else 5 if (pos_per >= 20 and neg_per < 80) \
-    else 6 if (pos_per >= 25 and neg_per < 75) \
-    else 7 if (pos_per >= 30 and neg_per < 70) \
-    else 8 if (pos_per >= 35 and neg_per < 65) \
-    else 9 if (pos_per >= 40 and neg_per < 60) \
-    else 10 if (pos_per >= 45 and neg_per < 55) \
-    else 11 if (pos_per >= 50 and neg_per < 50) \
-    else 12 if (pos_per >= 55 and neg_per < 45) \
-    else 13 if (pos_per >= 60 and neg_per < 40) \
-    else 14 if (pos_per >= 65 and neg_per < 35) \
-    else 15 if (pos_per >= 70 and neg_per < 30) \
-    else 16 if (pos_per >= 75 and neg_per < 25) \
-    else 17 if (pos_per >= 80 and neg_per < 20) \
-    else 18 if (pos_per >= 85 and neg_per < 15) \
-    else 19 if (pos_per >= 90 and neg_per < 10) \
-    else 20 if (pos_per >= 95 and neg_per < 5) \
-    else 21 if (pos_per >= 100 and neg_per < 0) \
-    else None                  
-
-    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
-    # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
-    #return jsonify(newDict)
-
-    comments_dict = predicted_comments.to_dict(orient="index")
+    senti_total_count = senti_positive_count + senti_negative_count
+    pos_per = (senti_positive_count/senti_total_count) * 100    
+    final_percentage = check_percentage(pos_per)
+    
+    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
+    print(check_percentage)
     results = {
+        'Total Comments':total_comments,
         'Positive Comments':positive_count,
         'Neutral Comments':neutral_count,
         'Negative Comments':negative_count,
         'Sarcastic Comments':sarcastic_count,
         'Nonsarcastic Comments':nonsarcastic_count,
-        'Total Comments':total_comments,
-        'Comments Dictionary':comments_dict,
-        'final_per' : final_per
+        'Sentitube Positve' :senti_positive_count,
+        'Sentitube Neutral' :senti_neutral_count,
+        'Sentitube Negative' :senti_negative_count,
+        'CustomFeedbackNo' : final_percentage,
+        'Comments Dictionary':final_comments_dict
     }
     return jsonify(results)
-
-
-@app.route('/percomment_results' , methods=['GET'])
-def percomment_results():
-    # Getting the UserInput
-    user_input = request.args.get('userinput', default = "", type = str)
-
-    yt_url = validatelink(user_input)
-    vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 250)
-    processed_comments = preprocess(fetched_comments)
-    predicted_comments= predict(processed_comments)
-    
-    predicted_comments_dict = predicted_comments.to_dict(orient="index")
-
-    return jsonify(predicted_comments_dict)
 
 @app.route('/extensionresults', methods=['GET'])
 def extensionresults():
@@ -397,11 +391,11 @@ def getsentituberesults(predicted_df):
      row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 1 else
     'neutral' if row['sentiment_predictions'] == 1 else
     'positive' if row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 0 else
-    'discard'
+    'discarded'
     ), axis=1)
     final_df = predicted_df.copy()
-    print(final_df)
-    final_df.to_csv('temp/temp_comments.csv')
+    #print(final_df)
+    #final_df.to_csv('temp/temp_comments.csv')
     return final_df
 
 if __name__ == '__main__':
