@@ -54,7 +54,7 @@ CORS(app)
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
 
-@app.route('/testresults', methods=['GET'])
+@app.route('/testsenitituberesults', methods=['GET'])
 def testresults():
     # Getting the UserInput
     user_input = request.args.get('userinput', default = "", type = str)
@@ -64,7 +64,7 @@ def testresults():
     if yt_url == "INVALID URL":
         return ("Invalid URL")
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 1000)
+    fetched_comments = fetchcomments(vid_id, 250)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
