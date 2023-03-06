@@ -127,7 +127,35 @@ def analysisresults():
     #counts from sarcasm analysis
     sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
     nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
-    
+
+    positive_per = (positive_count/total_comments) * 100
+    negative_per = (negative_count/total_comments) * 100
+    final_per = 0
+
+    check_percentage = lambda pos_per, neg_per: \
+    1 if (pos_per >= 0 and neg_per < 100) \
+    else 2 if (pos_per >= 5 and neg_per < 95) \
+    else 3 if (pos_per >= 10 and neg_per < 90) \
+    else 4 if (pos_per >= 15 and neg_per < 85) \
+    else 5 if (pos_per >= 20 and neg_per < 80) \
+    else 6 if (pos_per >= 25 and neg_per < 75) \
+    else 7 if (pos_per >= 30 and neg_per < 70) \
+    else 8 if (pos_per >= 35 and neg_per < 65) \
+    else 9 if (pos_per >= 40 and neg_per < 60) \
+    else 10 if (pos_per >= 45 and neg_per < 55) \
+    else 11 if (pos_per >= 50 and neg_per < 50) \
+    else 12 if (pos_per >= 55 and neg_per < 45) \
+    else 13 if (pos_per >= 60 and neg_per < 40) \
+    else 14 if (pos_per >= 65 and neg_per < 35) \
+    else 15 if (pos_per >= 70 and neg_per < 30) \
+    else 16 if (pos_per >= 75 and neg_per < 25) \
+    else 17 if (pos_per >= 80 and neg_per < 20) \
+    else 18 if (pos_per >= 85 and neg_per < 15) \
+    else 19 if (pos_per >= 90 and neg_per < 10) \
+    else 20 if (pos_per >= 95 and neg_per < 5) \
+    else 21 if (pos_per >= 100 and neg_per < 0) \
+    else None                  
+
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
@@ -137,7 +165,8 @@ def analysisresults():
         'Negative Comments':negative_count,
         'Sarcastic Comments':sarcastic_count,
         'Nonsarcastic Comments':nonsarcastic_count,
-        'Total Comments':total_comments
+        'Total Comments':total_comments,
+        'final_per' : final_per
     }
     return jsonify(results)
 
