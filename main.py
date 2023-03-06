@@ -131,13 +131,16 @@ def analysisresults():
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
+
+    comments_dict = predicted_comments.to_dict(orient="index")
     results = {
         'Positive Comments':positive_count,
         'Neutral Comments':neutral_count,
         'Negative Comments':negative_count,
         'Sarcastic Comments':sarcastic_count,
         'Nonsarcastic Comments':nonsarcastic_count,
-        'Total Comments':total_comments
+        'Total Comments':total_comments,
+        'Comments Dictionary':comments_dict,
     }
     return jsonify(results)
 
