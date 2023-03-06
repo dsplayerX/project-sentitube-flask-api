@@ -111,10 +111,8 @@ def analysisresults():
     user_input = data["userinput"]
     numresults = data["numresults"]
     print("User-Input: ", user_input)
-    yt_url = validatelink(user_input)
-    if yt_url == "INVALID URL":
-        return ("Invalid URL")
-    vid_id = get_video_id(yt_url)
+    # yt_url = validatelink(user_input)
+    vid_id = get_video_id(user_input)
     print("YouTube Video_ID: ", vid_id)
     fetched_comments = fetchcomments(vid_id, numresults)
     processed_comments = preprocess(fetched_comments)
