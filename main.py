@@ -109,13 +109,14 @@ def analysisresults():
     # user_input = request.args.get('userinput', default = "", type = str)
     data = request.get_json()
     user_input = data["userinput"]
+    numresults = data["numresults"]
     print("User-Input: ", user_input)
     yt_url = validatelink(user_input)
     if yt_url == "INVALID URL":
         return ("Invalid URL")
     vid_id = get_video_id(yt_url)
     print("YouTube Video_ID: ", vid_id)
-    fetched_comments = fetchcomments(vid_id, 250)
+    fetched_comments = fetchcomments(vid_id, numresults)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
