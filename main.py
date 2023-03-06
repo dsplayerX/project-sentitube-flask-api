@@ -46,13 +46,62 @@ print("> Sarcasm Model loaded successfully!")
 
 
 app = Flask(__name__)
-# CORS(app)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app)
+#CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 
 @app.route('/')
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
+
+@app.route('/testsenitituberesults', methods=['GET'])
+def testresults():
+    # Getting the UserInput
+    user_input = request.args.get('userinput', default = "", type = str)
+
+    print("User-Input: ", user_input)
+    yt_url = validatelink(user_input)
+    if yt_url == "INVALID URL":
+        return ("Invalid URL")
+    vid_id = get_video_id(yt_url)
+    fetched_comments = fetchcomments(vid_id, 250)
+    processed_comments = preprocess(fetched_comments)
+    predicted_comments= predict(processed_comments)
+    sentitube_comments= getsentituberesults(predicted_comments)
+
+
+    total_comments = int(predicted_comments.shape[0])
+    # counts from sentiment analysis
+    positive_count = int((predicted_comments['sentiment_predictions'] == 2).sum())
+    neutral_count = int((predicted_comments['sentiment_predictions'] == 1).sum())
+    negative_count = int((predicted_comments['sentiment_predictions'] == 0).sum())
+    #counts from sarcasm analysis
+    sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
+    nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
+    #counts from sentitube results
+    senti_positive_count = int((predicted_comments['sentitube_results'] == 'positive').sum())
+    senti_neutral_count = int((predicted_comments['sentitube_results'] == 'neutral').sum())
+    senti_negative_count = int((predicted_comments['sentitube_results'] == 'negative').sum())
+    sentidiscard = int((predicted_comments['sentitube_results'] == 'discard').sum())
+
+
+
+    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
+    # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
+    #return jsonify(newDict)
+    results = {
+        'Positive Comments':positive_count,
+        'Neutral Comments':neutral_count,
+        'Negative Comments':negative_count,
+        'Sarcastic Comments':sarcastic_count,
+        'Nonsarcastic Comments':nonsarcastic_count,
+        'Total Comments':total_comments,
+        'Sentitube Positve' :senti_positive_count,
+        'Sentitube Neutral' :senti_neutral_count,
+        'Sentitube Negative' :senti_negative_count,
+        'Discard': sentidiscard,
+    }
+    return jsonify(results)
 
 @app.route('/analysisresults', methods=['POST'])
 def analysisresults():
@@ -309,6 +358,19 @@ def predict(comments_df):
 
     return predicted_df
 
+def getsentituberesults(predicted_df):
+
+    predicted_df['sentitube_results'] = predicted_df.apply(lambda row: (
+    'negative' if row['sentiment_predictions'] == 0 or
+     row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 1 else
+    'neutral' if row['sentiment_predictions'] == 1 else
+    'positive' if row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 0 else
+    'discard'
+    ), axis=1)
+    final_df = predicted_df.copy()
+    print(final_df)
+    final_df.to_csv('temp/temp_comments.csv')
+    return final_df
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
