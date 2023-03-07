@@ -122,18 +122,18 @@ def analysisresults():
     final_comments_dict = sentitube_comments.to_dict(orient="index")
 
 
-    total_comments = int(predicted_comments.shape[0])
+    total_comments = int(sentitube_comments.shape[0])
     # counts from sentiment analysis
-    positive_count = int((predicted_comments['sentiment_predictions'] == 2).sum())
-    neutral_count = int((predicted_comments['sentiment_predictions'] == 1).sum())
-    negative_count = int((predicted_comments['sentiment_predictions'] == 0).sum())
+    positive_count = int((sentitube_comments['sentiment_predictions'] == 2).sum())
+    neutral_count = int((sentitube_comments['sentiment_predictions'] == 1).sum())
+    negative_count = int((sentitube_comments['sentiment_predictions'] == 0).sum())
     #counts from sarcasm analysis
-    sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
-    nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
+    sarcastic_count = int((sentitube_comments['sarcasm_predictions'] == 1).sum())
+    nonsarcastic_count = int((sentitube_comments['sarcasm_predictions'] == 0).sum())
     #counts from sentitube results
-    senti_positive_count = int((predicted_comments['sentitube_results'] == 'positive').sum())
-    senti_neutral_count = int((predicted_comments['sentitube_results'] == 'neutral').sum())
-    senti_negative_count = int((predicted_comments['sentitube_results'] == 'negative').sum())
+    senti_positive_count = int((sentitube_comments['sentitube_results'] == 'positive').sum())
+    senti_neutral_count = int((sentitube_comments['sentitube_results'] == 'neutral').sum())
+    senti_negative_count = int((sentitube_comments['sentitube_results'] == 'negative').sum())
 
     # calculating percenatages for custom feedback
     check_percentage = lambda pos_per: \
@@ -192,16 +192,21 @@ def extensionresults():
     fetched_comments = fetchcomments(vid_id, 200)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
+    sentitube_comments= getsentituberesults(predicted_comments)
 
     total_comments = int(predicted_comments.shape[0])
     # counts from sentiment analysis
-    positive_count = int((predicted_comments['sentiment_predictions'] == 2).sum())
-    neutral_count = int((predicted_comments['sentiment_predictions'] == 1).sum())
-    negative_count = int((predicted_comments['sentiment_predictions'] == 0).sum())
+    positive_count = int((sentitube_comments['sentiment_predictions'] == 2).sum())
+    neutral_count = int((sentitube_comments['sentiment_predictions'] == 1).sum())
+    negative_count = int((sentitube_comments['sentiment_predictions'] == 0).sum())
     #counts from sarcasm analysis
-    sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
-    nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
-    
+    sarcastic_count = int((sentitube_comments['sarcasm_predictions'] == 1).sum())
+    nonsarcastic_count = int((sentitube_comments['sarcasm_predictions'] == 0).sum())
+    #counts from sentitube results
+    senti_positive_count = int((sentitube_comments['sentitube_results'] == 'positive').sum())
+    senti_neutral_count = int((sentitube_comments['sentitube_results'] == 'neutral').sum())
+    senti_negative_count = int((sentitube_comments['sentitube_results'] == 'negative').sum())
+
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
@@ -211,6 +216,9 @@ def extensionresults():
         'Negative Comments':negative_count,
         'Sarcastic Comments':sarcastic_count,
         'Nonsarcastic Comments':nonsarcastic_count,
+        'Sentitube Positve' :senti_positive_count,
+        'Sentitube Neutral' :senti_neutral_count,
+        'Sentitube Negative' :senti_negative_count,
         'Total Comments':total_comments
     }
     return jsonify(results)
