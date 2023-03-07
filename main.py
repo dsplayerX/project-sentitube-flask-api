@@ -189,7 +189,7 @@ def extensionresults():
 
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 200)
+    fetched_comments = fetchcomments(vid_id, 300)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
@@ -310,6 +310,7 @@ def fetchcomments(video_id, no_of_comments):
             part="snippet",
             maxResults=100,
             videoId=video_id,
+            order="relevance",
             textFormat="plainText",
             pageToken = nextPageToken
         ).execute()
