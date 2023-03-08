@@ -36,6 +36,9 @@ api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
 
+youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey = api_key)
+
 # load saved sentiment analysis model
 sentiment_model = pickle.load(open("models/sentiment-analysis-pipeline.pkl", "rb"))
 print("> Sentiment Model loaded successfully!")
@@ -114,6 +117,9 @@ def analysisresults():
     # yt_url = validatelink(user_input)
     vid_id = get_video_id(user_input)
     print("YouTube Video_ID: ", vid_id)
+
+    vid_title = getvideotitle(vid_id)
+
     fetched_comments = fetchcomments(vid_id, numresults)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
@@ -168,6 +174,8 @@ def analysisresults():
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
     print(check_percentage)
     results = {
+        'Video Title': vid_title,
+        'Video Id': vid_id,
         'Total Comments':total_comments,
         'Positive Comments':positive_count,
         'Neutral Comments':neutral_count,
@@ -286,14 +294,24 @@ def get_video_id(youtube_url):
             return query_params["v"][0]
         elif parsed_url.path.startswith("/embed/"):
             return parsed_url.path.split("/")[-1]
+        elif parsed_url.hostname == "youtu.be": # this works when you enter a shortened youtube url
+            return parsed_url.path[1:]
     return None
 
     # return video_id
+def getvideotitle(video_id):
+    # Call the videos.list method with id and part parameters
+    request = youtube.videos().list(id=video_id, part="snippet")
+    response = request.execute()
+
+    # Get the title from the snippet object
+    title = response["items"][0]["snippet"]["title"]
+
+    # Return the title as plain text
+    return title
 
 
 def fetchcomments(video_id, no_of_comments):
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey = api_key)
     comments = []
 
     # Function to load comments and append necessary details to the comments array
