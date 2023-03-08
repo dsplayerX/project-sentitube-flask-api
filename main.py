@@ -121,8 +121,6 @@ def analysisresults():
     vid_title = getvideotitle(vid_id)
 
     fetched_comments = fetchcomments(vid_id, numresults)
-    if len(fetched_comments) == 0:
-       abort(500, description="Could not fetch comments!")
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
@@ -357,6 +355,7 @@ def fetchcomments(video_id, no_of_comments):
 
     if len(comments_df) == 0:
         print("Error while fetching comments.")
+        abort(500, description="Could not fetch comments!")
     else:
         print("Comments fetched successfully.")
     # print(comments_df)
@@ -406,32 +405,39 @@ def preprocess(comments_df):
         abort(500, description="Could not preprocess comments!")
 
 def predict(comments_df):
-    # adding sentiment and sarcasm predictions columns to dataframe
-    comments_df['sentiment_predictions'] = sentiment_model.predict(comments_df["processed_text"])
-    print("Sentiments predicted successfully.")
+    try:
+        # adding sentiment and sarcasm predictions columns to dataframe
+        comments_df['sentiment_predictions'] = sentiment_model.predict(comments_df["processed_text"])
+        print("Sentiments predicted successfully.")
 
-    comments_df['sarcasm_predictions'] = sarcasm_model.predict(comments_df["processed_text"])
-    print("Sarcasm predicted successfully.")
+        comments_df['sarcasm_predictions'] = sarcasm_model.predict(comments_df["processed_text"])
+        print("Sarcasm predicted successfully.")
 
-    # copying the dataframe and dropping the column used in preprocessing
-    predicted_df = comments_df.copy()
-    predicted_df = predicted_df.drop(['processed_text'], axis=1)
+        # copying the dataframe and dropping the column used in preprocessing
+        predicted_df = comments_df.copy()
+        predicted_df = predicted_df.drop(['processed_text'], axis=1)
 
-    return predicted_df
+        return predicted_df
+    except:
+        print("!!!Error while predicting sentiments and sarcasms.")
+        abort(500, description="Could not predict sentiments and/or sarcasm!")
 
 def getsentituberesults(predicted_df):
-
-    predicted_df['sentitube_results'] = predicted_df.apply(lambda row: (
-    'negative' if row['sentiment_predictions'] == 0 or
-     row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 1 else
-    'neutral' if row['sentiment_predictions'] == 1 else
-    'positive' if row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 0 else
-    'discarded'
-    ), axis=1)
-    final_df = predicted_df.copy()
-    #print(final_df)
-    #final_df.to_csv('temp/temp_comments.csv')
-    return final_df
+    try:
+        predicted_df['sentitube_results'] = predicted_df.apply(lambda row: (
+        'negative' if row['sentiment_predictions'] == 0 or
+        row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 1 else
+        'neutral' if row['sentiment_predictions'] == 1 else
+        'positive' if row['sentiment_predictions'] == 2 and row['sarcasm_predictions'] == 0 else
+        'discarded'
+        ), axis=1)
+        final_df = predicted_df.copy()
+        #print(final_df)
+        #final_df.to_csv('temp/temp_comments.csv')
+        return final_df
+    except:
+        print("!!!Couldn't get SentiTube results.")
+        abort(500, description="Could not get SentiTube results!")
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
