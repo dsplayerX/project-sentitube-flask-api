@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request # redirect, url_for
+from flask import Flask, jsonify, request, abort # redirect, url_for
 from flask_cors import CORS
 import requests
 import os
@@ -121,6 +121,8 @@ def analysisresults():
     vid_title = getvideotitle(vid_id)
 
     fetched_comments = fetchcomments(vid_id, numresults)
+    if len(fetched_comments) == 0:
+       abort(500, description="Could not fetch comments!")
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
@@ -353,48 +355,55 @@ def fetchcomments(video_id, no_of_comments):
         comments_df = pd.DataFrame(comments, columns=["rawcomment"])
         # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
-    print("Comments fetched successfully.")
+    if len(comments_df) == 0:
+        print("Error while fetching comments.")
+    else:
+        print("Comments fetched successfully.")
     # print(comments_df)
     # comments_df_dict = comments_df.to_dict(orient="index")
     return comments_df
 
 
 def preprocess(comments_df):
-    # comments_df = pd.DataFrame.from_dict(comments_df_dict, orient="index")
-    # copying rawcomments to a new column for preprocessing
-    comments_df['processed_text'] = comments_df['rawcomment']
-    # Step - a : Remove blank rows if any.
-    comments_df['processed_text'].dropna(inplace=True)
+    try:
+        # comments_df = pd.DataFrame.from_dict(comments_df_dict, orient="index")
+        # copying rawcomments to a new column for preprocessing
+        comments_df['processed_text'] = comments_df['rawcomment']
+        # Step - a : Remove blank rows if any.
+        comments_df['processed_text'].dropna(inplace=True)
 
-    # Step - b : Change all the text to lower case. This is required as python interprets 'dog' and 'DOG' differently
-    comments_df['processed_text'] = [str(entry).lower() for entry in comments_df['processed_text']]
+        # Step - b : Change all the text to lower case. This is required as python interprets 'dog' and 'DOG' differently
+        comments_df['processed_text'] = [str(entry).lower() for entry in comments_df['processed_text']]
 
-    # Step - c : Tokenization : In this each entry in the corpus will be broken into set of words
-    comments_df['processed_text'] = [word_tokenize(entry) for entry in comments_df['processed_text']]
+        # Step - c : Tokenization : In this each entry in the corpus will be broken into set of words
+        comments_df['processed_text'] = [word_tokenize(entry) for entry in comments_df['processed_text']]
 
-    # Step - d : Remove Stop words, Non-Numeric and perfom Word Stemming/Lemmenting.
-    # WordNetLemmatizer requires Pos tags to understand if the word is noun or verb or adjective etc. By default it is set to Noun
-    tag_map = defaultdict(lambda : wn.NOUN)
-    tag_map['J'] = wn.ADJ
-    tag_map['V'] = wn.VERB
-    tag_map['R'] = wn.ADV
-    for index,entry in enumerate(comments_df['processed_text']):
-        # Declaring Empty List to store the words that follow the rules for this step
-        Processed_text = []
-        # Initializing WordNetLemmatizer()
-        word_Lemmatized = WordNetLemmatizer()
-        # pos_tag function below will provide the 'tag' i.e if the word is Noun(N) or Verb(V) or something else.
-        for word, tag in pos_tag(entry):
-            # Below condition is to check for Stop words and consider only alphabets
-            if word not in stopwords.words('english') and word.isalpha():
-                word_Final = word_Lemmatized.lemmatize(word,tag_map[tag[0]])
-                Processed_text.append(word_Final)
-        # The final processed set of words for each iteration will be stored in 'text_final'
-        comments_df.loc[index,'processed_text'] = str(Processed_text)
+        # Step - d : Remove Stop words, Non-Numeric and perfom Word Stemming/Lemmenting.
+        # WordNetLemmatizer requires Pos tags to understand if the word is noun or verb or adjective etc. By default it is set to Noun
+        tag_map = defaultdict(lambda : wn.NOUN)
+        tag_map['J'] = wn.ADJ
+        tag_map['V'] = wn.VERB
+        tag_map['R'] = wn.ADV
+        for index,entry in enumerate(comments_df['processed_text']):
+            # Declaring Empty List to store the words that follow the rules for this step
+            Processed_text = []
+            # Initializing WordNetLemmatizer()
+            word_Lemmatized = WordNetLemmatizer()
+            # pos_tag function below will provide the 'tag' i.e if the word is Noun(N) or Verb(V) or something else.
+            for word, tag in pos_tag(entry):
+                # Below condition is to check for Stop words and consider only alphabets
+                if word not in stopwords.words('english') and word.isalpha():
+                    word_Final = word_Lemmatized.lemmatize(word,tag_map[tag[0]])
+                    Processed_text.append(word_Final)
+            # The final processed set of words for each iteration will be stored in 'text_final'
+            comments_df.loc[index,'processed_text'] = str(Processed_text)
     
-    print("Comments preprocessed successfully.")
+        print("Comments preprocessed successfully.")
 
-    return comments_df
+        return comments_df
+    except:
+        print("!!!Error while preprocessing.")
+        abort(500, description="Could not preprocess comments!")
 
 def predict(comments_df):
     # adding sentiment and sarcasm predictions columns to dataframe
