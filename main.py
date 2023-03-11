@@ -1,15 +1,12 @@
 from flask import Flask, jsonify, request, abort # redirect, url_for
-from flask_cors import CORS
-import requests
+from flask_cors import CORS # fix for CORS error
 import os
-import googleapiclient.discovery
+import googleapiclient.discovery # youtube api
 import pandas as pd
-from dotenv import load_dotenv
+from dotenv import load_dotenv # loading api keys from enviroment
 from urllib.parse import urlparse, parse_qs # for formatting yt url
-import pickle
-import nltk
-
-
+import pickle # for loading models into API
+import nltk # used for preprocessing of fetched comments
 from collections import defaultdict
 
 # Download dependency
