@@ -199,10 +199,10 @@ def analysisresults():
 def extensionresults():
     # Getting the UserInput
     user_input = request.args.get('userinput', default = "", type = str)
-
+    numresults = 300
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 300)
+    fetched_comments = fetchcomments(vid_id, numresults)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
