@@ -1,15 +1,12 @@
 from flask import Flask, jsonify, request, abort # redirect, url_for
-from flask_cors import CORS
-import requests
+from flask_cors import CORS # fix for CORS error
 import os
-import googleapiclient.discovery
+import googleapiclient.discovery # youtube api
 import pandas as pd
-from dotenv import load_dotenv
+from dotenv import load_dotenv # loading api keys from enviroment
 from urllib.parse import urlparse, parse_qs # for formatting yt url
-import pickle
-import nltk
-
-
+import pickle # for loading models into API
+import nltk # used for preprocessing of fetched comments
 from collections import defaultdict
 
 # Download dependency
@@ -115,16 +112,21 @@ def analysisresults():
     numresults = data["numresults"]
     print("User-Input: ", user_input)
     # yt_url = validatelink(user_input)
+    # extracts the YouTube video ID from the validated link
     vid_id = get_video_id(user_input)
     print("YouTube Video_ID: ", vid_id)
 
+    # get video title fro the video id
     vid_title = getvideotitle(vid_id)
 
+    # retrieve number of related comments from the video id 
     fetched_comments = fetchcomments(vid_id, numresults)
     processed_comments = preprocess(fetched_comments)
+    # Use the trained model to predict the sentiment and sarcasm of the preprocessed comments
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
 
+    # Create a dictionary called final comments dict and kept comment results on it.
     final_comments_dict = sentitube_comments.to_dict(orient="index")
 
 
@@ -167,7 +169,9 @@ def analysisresults():
     else 21 if (pos_per == 100) \
     else 0 
 
+    # count all senti positive comments and senti negative comments
     senti_total_count = senti_positive_count + senti_negative_count
+    # calaculate the senti positive persentage
     pos_per = (senti_positive_count/senti_total_count) * 100    
     final_percentage = check_percentage(pos_per)
     
@@ -188,16 +192,17 @@ def analysisresults():
         'CustomFeedbackNo' : final_percentage,
         'Comments Dictionary':final_comments_dict
     }
+    # returns the dictionary as a JSON object using the 'jsonify()' method
     return jsonify(results)
 
 @app.route('/extensionresults', methods=['GET'])
 def extensionresults():
     # Getting the UserInput
     user_input = request.args.get('userinput', default = "", type = str)
-
+    numresults = 300
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 300)
+    fetched_comments = fetchcomments(vid_id, numresults)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
