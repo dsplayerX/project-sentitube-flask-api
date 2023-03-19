@@ -108,9 +108,9 @@ def analysisresults():
     # Getting the UserInput
     # user_input = request.args.get('userinput', default = "", type = str)
     data = request.get_json()
-    user_input = data["userinput"]
-    numresults = data["numresults"]
-    orderresults = data["orderresults"]
+    user_input = data["userinput"] # youtube link user entered
+    numresults = data["numresults"] # number of comments to fetch
+    orderresults = data["orderresults"] # the sorting order of the comments
     print("User-Input: ", user_input)
     # yt_url = validatelink(user_input)
     # extracts the YouTube video ID from the validated link
@@ -130,7 +130,7 @@ def analysisresults():
     # Create a dictionary called final comments dict and kept comment results on it.
     final_comments_dict = sentitube_comments.to_dict(orient="index")
 
-
+    # get total comments by getting the shape of df
     total_comments = int(sentitube_comments.shape[0])
     # counts from sentiment analysis
     positive_count = int((sentitube_comments['sentiment_predictions'] == 2).sum())
@@ -239,24 +239,6 @@ def extensionresults():
 
 # GLOBAL FUNCTIONS
 def validatelink(user_input):
-    
-
-    ### OLD VALIDATION
-    # # Function for validating the URL (is a valid URL or not?)
-    # def is_url(url):
-    #     try:
-    #         result = urlparse(url)
-    #         return all([result.scheme, result.netloc])
-    #     except ValueError:
-    #         return False
-
-    # # Validating the user input to see if it's a valid URL
-    # if (is_url(user_input)):
-    #     print("Valid URL")
-    # else:
-    #     print("Invalid URL")
-    #     return ("Please enter a valid URL.")
-
     # Function for validing whether a url is from YouTube domain or not
     def is_valid_youtube_url(url):
         youtube_hostnames = ("www.youtube.com", "youtube.com", "m.youtube.com", "youtu.be")
@@ -280,7 +262,6 @@ def validatelink(user_input):
     else:
         print("User input is a INVALID YouTube URL")
         return ("INVALID URL")
-        # FIND A WAY FOR THIS EXCEPTION TO BE HANDLEDDD!!!!
     
     # If all the validations are passed, the user_input is assigned as the youtube_url to extract the video id
     youtube_url = user_input
@@ -290,8 +271,6 @@ def validatelink(user_input):
 
 def get_video_id(youtube_url):
     # Extracting the Video ID from the YouTube URL
-    # url_data = urlparse(youtube_url)
-    # video_id = url_data.query[2::]
     youtube_hostnames = ("www.youtube.com", "youtube.com", "m.youtube.com", "youtu.be")
     parsed_url = urlparse(youtube_url)
     if parsed_url.hostname in youtube_hostnames:
@@ -318,11 +297,14 @@ def getvideotitle(video_id):
 
 
 def fetchcomments(video_id, no_of_comments, sort_by):
-    order_by="relevance"
+
+    order_by = "relevance" # default order is relavance
+
+    #if user want to sort differnetly, correct variable is assigned.
     if (sort_by == "Top commnets"):
-        order_by="relevance"
+        order_by = "relevance"
     elif (sort_by == "Newest first"):
-        order_by="time"
+        order_by = "time"
 
     print("Commennts to fetch: ", no_of_comments, "\nOrder by: ", order_by)
 
@@ -379,19 +361,18 @@ def fetchcomments(video_id, no_of_comments, sort_by):
 
 def preprocess(comments_df):
     try:
-        # comments_df = pd.DataFrame.from_dict(comments_df_dict, orient="index")
         # copying rawcomments to a new column for preprocessing
         comments_df['processed_text'] = comments_df['rawcomment']
-        # Step - a : Remove blank rows if any.
+        # Remove blank rows if any.
         comments_df['processed_text'].dropna(inplace=True)
 
-        # Step - b : Change all the text to lower case. This is required as python interprets 'dog' and 'DOG' differently
+        # Change all the text to lower case. This is required as python interprets 'dog' and 'DOG' differently
         comments_df['processed_text'] = [str(entry).lower() for entry in comments_df['processed_text']]
 
-        # Step - c : Tokenization : In this each entry in the corpus will be broken into set of words
+        # Tokenization : In this each entry in the corpus will be broken into set of words
         comments_df['processed_text'] = [word_tokenize(entry) for entry in comments_df['processed_text']]
 
-        # Step - d : Remove Stop words, Non-Numeric and perfom Word Stemming/Lemmenting.
+        # Remove Stop words, Non-Numeric and perfom Word Stemming/Lemmenting.
         # WordNetLemmatizer requires Pos tags to understand if the word is noun or verb or adjective etc. By default it is set to Noun
         tag_map = defaultdict(lambda : wn.NOUN)
         tag_map['J'] = wn.ADJ
