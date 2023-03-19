@@ -44,8 +44,10 @@ print("> Sentiment Model loaded successfully!")
 sarcasm_model = pickle.load(open("models/sarcasm-analysis-pipeline.pkl", "rb"))
 print("> Sarcasm Model loaded successfully!")
 
-
+# creating an flask app
 app = Flask(__name__)
+
+# wraaping app in CORS to remove CORS erros
 CORS(app)
 #CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
