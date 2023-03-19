@@ -307,7 +307,7 @@ def fetchcomments(video_id, no_of_comments, sort_by):
     if (sort_by == "Newest first"):
         order_by = "time"
 
-    print("Commennts to fetch: ", no_of_comments, "\nOrder by: ", order_by)
+    print("Comments to fetch: ", no_of_comments, "\nOrder by: ", order_by)
 
     comments = []
 
@@ -369,7 +369,6 @@ def preprocess(comments_df):
 
         # Change all the text to lower case. This is required as python interprets 'dog' and 'DOG' differently
         comments_df['processed_text'] = [str(entry).lower() for entry in comments_df['processed_text']]
-
         # Tokenization : In this each entry in the corpus will be broken into set of words
         comments_df['processed_text'] = [word_tokenize(entry) for entry in comments_df['processed_text']]
 
@@ -381,17 +380,17 @@ def preprocess(comments_df):
         tag_map['R'] = wn.ADV
         for index,entry in enumerate(comments_df['processed_text']):
             # Declaring Empty List to store the words that follow the rules for this step
-            Processed_text = []
+            Processed_words = []
             # Initializing WordNetLemmatizer()
             word_Lemmatized = WordNetLemmatizer()
             # pos_tag function below will provide the 'tag' i.e if the word is Noun(N) or Verb(V) or something else.
             for word, tag in pos_tag(entry):
                 # Below condition is to check for Stop words and consider only alphabets
                 if word not in stopwords.words('english') and word.isalpha():
-                    word_Final = word_Lemmatized.lemmatize(word,tag_map[tag[0]])
-                    Processed_text.append(word_Final)
+                    word_Processed = word_Lemmatized.lemmatize(word,tag_map[tag[0]])
+                    Processed_words.append(word_Processed)
             # The final processed set of words for each iteration will be stored in 'text_final'
-            comments_df.loc[index,'processed_text'] = str(Processed_text)
+            comments_df.loc[index,'processed_text'] = str(Processed_words)
     
         print("Comments preprocessed successfully.")
 
