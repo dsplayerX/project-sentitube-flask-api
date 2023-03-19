@@ -206,7 +206,7 @@ def extensionresults():
     orderresults = "Top comments"
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, numresults)
+    fetched_comments = fetchcomments(vid_id, numresults, orderresults)
     processed_comments = preprocess(fetched_comments)
     predicted_comments= predict(processed_comments)
     sentitube_comments= getsentituberesults(predicted_comments)
