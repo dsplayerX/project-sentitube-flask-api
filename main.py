@@ -110,6 +110,7 @@ def analysisresults():
     data = request.get_json()
     user_input = data["userinput"]
     numresults = data["numresults"]
+    orderresults = data["orderresults"]
     print("User-Input: ", user_input)
     # yt_url = validatelink(user_input)
     # extracts the YouTube video ID from the validated link
@@ -120,7 +121,7 @@ def analysisresults():
     vid_title = getvideotitle(vid_id)
 
     # retrieve number of related comments from the video id 
-    fetched_comments = fetchcomments(vid_id, numresults)
+    fetched_comments = fetchcomments(vid_id, numresults, orderresults)
     processed_comments = preprocess(fetched_comments)
     # Use the trained model to predict the sentiment and sarcasm of the preprocessed comments
     predicted_comments= predict(processed_comments)
@@ -316,7 +317,15 @@ def getvideotitle(video_id):
     return title
 
 
-def fetchcomments(video_id, no_of_comments):
+def fetchcomments(video_id, no_of_comments, sort_by):
+    order_by="relevance"
+    if (sort_by == "Top commnets"):
+        order_by="relevance"
+    elif (sort_by == "Newest first"):
+        order_by="time"
+
+    print("Commennts to fetch: ", no_of_comments, "\nOrder by: ", order_by)
+
     comments = []
 
     # Function to load comments and append necessary details to the comments array
@@ -333,7 +342,7 @@ def fetchcomments(video_id, no_of_comments):
             part="snippet",
             maxResults=100,
             videoId=video_id,
-            order="relevance",
+            order=str(order_by),
             textFormat="plainText",
             pageToken = nextPageToken
         ).execute()
