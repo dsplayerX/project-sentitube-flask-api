@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request, abort # redirect, url_for
 from flask_cors import CORS # fix for CORS error
 import os
 import googleapiclient.discovery # youtube api
-from googleapiclient.errors import HttpError
 import pandas as pd
 from dotenv import load_dotenv # loading api keys from enviroment
 from urllib.parse import urlparse, parse_qs # for formatting yt url
@@ -149,7 +148,8 @@ def analysisresults():
 
     # calculating percenatages for custom feedback
     check_percentage = lambda pos_per: \
-    1 if (pos_per == 0) \
+    0 if (pos_per == -1) \
+    else 1 if (pos_per == 0) \
     else 2 if (pos_per > 0 and pos_per < 5) \
     else 2 if (pos_per >= 5 and pos_per < 10) \
     else 3 if (pos_per >= 10 and pos_per < 15) \
@@ -176,7 +176,9 @@ def analysisresults():
     # count all senti positive comments and senti negative comments
     senti_total_count = senti_positive_count + senti_negative_count
     # calaculate the senti positive persentage
-    pos_per = (senti_positive_count/senti_total_count) * 100    
+    pos_per = -1
+    if senti_total_count != 0:
+        pos_per = (senti_positive_count/senti_total_count) * 100 
     final_percentage = check_percentage(pos_per)
     
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
@@ -299,7 +301,7 @@ def getvideotitle(video_id):
     # Return the title as plain text
     return title
 
-
+# function to fetch comments from given YouTube Video ID, number of comments and the sorting order
 def fetchcomments(video_id, no_of_comments, sort_by):
     order_by = "relevance" # default order is relevance
 
@@ -310,31 +312,37 @@ def fetchcomments(video_id, no_of_comments, sort_by):
 
     comments = []
 
+    # function to load comments from a match into the comments list
     def load_comments(match):
         comments.extend(comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"] for comment in match["items"])
-
+    
+    # function to get the comment threads for a video
     def get_comment_threads(youtube, video_id, nextPageToken):
         return youtube.commentThreads().list(
             part="snippet",
             maxResults=100,
-            videoId=video_id,
-            order=order_by,
+            videoId=video_id, # from userinput
+            order=order_by, # from userinput
             textFormat="plainText",
             pageToken=nextPageToken
         ).execute()
 
     try:
         next_page_token = ''
-        while len(comments) < no_of_comments and next_page_token is not None:
+        # loop through the comment threads until the user entered number of comments is reached or there are no more comments
+        # "no of comments" used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
+        while len(comments) < no_of_comments and next_page_token is not None: 
             match = get_comment_threads(youtube, video_id, next_page_token)
             next_page_token = match.get("nextPageToken")
             load_comments(match)
 
         comments_df = pd.DataFrame(comments, columns=["rawcomment"])
         if len(comments_df) == 0:
+            # raise an error if comments_df is empty
             print("Error while fetching comments: no comments found or comments disabled.")
             abort(500, description="Could not fetch comments!")
         else:
+            # raise an error if there was an issue fetching comments
             print("Comments fetched successfully.")
         return comments_df
     except:
