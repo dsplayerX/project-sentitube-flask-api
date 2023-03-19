@@ -54,7 +54,7 @@ CORS(app)
 
 @app.route('/')
 def index():
-    return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
+    return jsonify({"SentiTube Backend API": "SentiTube by phoeniX"})
 
 @app.route('/testsenitituberesults', methods=['GET'])
 def testresults():
