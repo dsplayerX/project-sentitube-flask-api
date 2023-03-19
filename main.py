@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, abort # redirect, url_for
 from flask_cors import CORS # fix for CORS error
 import os
 import googleapiclient.discovery # youtube api
+from googleapiclient.errors import HttpError
 import pandas as pd
 from dotenv import load_dotenv # loading api keys from enviroment
 from urllib.parse import urlparse, parse_qs # for formatting yt url
@@ -300,66 +301,47 @@ def getvideotitle(video_id):
 
 
 def fetchcomments(video_id, no_of_comments, sort_by):
+    order_by = "relevance" # default order is relevance
 
-    order_by = "relevance" # default order is relavance
-
-    #if user want to sort differnetly, correct variable is assigned.
-    if (sort_by == "Newest first"):
+    if sort_by == "Newest first":
         order_by = "time"
 
     print("Comments to fetch: ", no_of_comments, "\nOrder by: ", order_by)
 
     comments = []
 
-    # Function to load comments and append necessary details to the comments array
     def load_comments(match):
-        for item in match["items"]:
-            comment = item["snippet"]["topLevelComment"]
-            text = comment["snippet"]["textDisplay"]
-            # print(text)
-            comments.append(text)
-            
-    # Function to get comments from subsequent comment pages
+        comments.extend(comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"] for comment in match["items"])
+
     def get_comment_threads(youtube, video_id, nextPageToken):
-        results = youtube.commentThreads().list(
+        return youtube.commentThreads().list(
             part="snippet",
             maxResults=100,
             videoId=video_id,
-            order=str(order_by),
+            order=order_by,
             textFormat="plainText",
-            pageToken = nextPageToken
+            pageToken=nextPageToken
         ).execute()
-        return results
 
     try:
-        match = get_comment_threads(youtube, video_id, '')
-        load_comments(match)
-        next_page_token = match["nextPageToken"] # if the video has less than 100 top level comments this returns a keyerror
-    except:
-        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
-        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
-        
-    try:
-        while next_page_token and len(comments) < no_of_comments: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
+        next_page_token = ''
+        while len(comments) < no_of_comments and next_page_token is not None:
             match = get_comment_threads(youtube, video_id, next_page_token)
-            next_page_token = match["nextPageToken"]  # if the video has less than 100 top level comments this returns a keyerror
+            next_page_token = match.get("nextPageToken")
             load_comments(match)
+
         comments_df = pd.DataFrame(comments, columns=["rawcomment"])
-        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+        if len(comments_df) == 0:
+            print("Error while fetching comments: no comments found or comments disabled.")
+            abort(500, description="Could not fetch comments!")
+        else:
+            print("Comments fetched successfully.")
+        return comments_df
     except:
-        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
-        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+            print("Error while fetching comments: no comments found or comments disabled.")
+            abort(500,  description="Could not fetch comments!")
 
-    if len(comments_df) == 0:
-        print("Error while fetching comments.")
-        abort(500, description="Could not fetch comments!")
-    else:
-        print("Comments fetched successfully.")
-    # print(comments_df)
-    # comments_df_dict = comments_df.to_dict(orient="index")
-    return comments_df
-
-
+# function to preprocess the fetched comments
 def preprocess(comments_df):
     try:
         # copying rawcomments to a new column for preprocessing
