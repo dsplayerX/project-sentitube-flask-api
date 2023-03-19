@@ -203,6 +203,7 @@ def extensionresults():
     # Getting the UserInput
     user_input = request.args.get('userinput', default = "", type = str)
     numresults = 300
+    orderresults = "Top comments"
     yt_url = validatelink(user_input)
     vid_id = get_video_id(yt_url)
     fetched_comments = fetchcomments(vid_id, numresults)
@@ -303,9 +304,7 @@ def fetchcomments(video_id, no_of_comments, sort_by):
     order_by = "relevance" # default order is relavance
 
     #if user want to sort differnetly, correct variable is assigned.
-    if (sort_by == "Top commnets"):
-        order_by = "relevance"
-    elif (sort_by == "Newest first"):
+    if (sort_by == "Newest first"):
         order_by = "time"
 
     print("Commennts to fetch: ", no_of_comments, "\nOrder by: ", order_by)
