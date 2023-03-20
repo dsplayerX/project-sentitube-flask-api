@@ -303,53 +303,66 @@ def getvideotitle(video_id):
 
 # function to fetch comments from given YouTube Video ID, number of comments and the sorting order
 def fetchcomments(video_id, no_of_comments, sort_by):
-    order_by = "relevance" # default order is relevance
 
-    if sort_by == "Newest first":
+    order_by = "relevance" # default order is relavance
+
+    #if user want to sort differnetly, correct variable is assigned.
+    if (sort_by == "Newest first"):
         order_by = "time"
 
     print("Comments to fetch: ", no_of_comments, "\nOrder by: ", order_by)
 
     comments = []
 
-    # function to load comments from a match into the comments list
+    # Function to load comments and append necessary details to the comments array
     def load_comments(match):
-        comments.extend(comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"] for comment in match["items"])
-    
-    # function to get the comment threads for a video
+        for item in match["items"]:
+            comment = item["snippet"]["topLevelComment"]
+            text = comment["snippet"]["textDisplay"]
+            # print(text)
+            comments.append(text)
+            
+    # Function to get comments from subsequent comment pages
     def get_comment_threads(youtube, video_id, nextPageToken):
-        return youtube.commentThreads().list(
+        results = youtube.commentThreads().list(
             part="snippet",
             maxResults=100,
-            videoId=video_id, # from userinput
-            order=order_by, # from userinput
+            videoId=video_id,
+            order=str(order_by),
             textFormat="plainText",
-            pageToken=nextPageToken
+            pageToken = nextPageToken
         ).execute()
+        return results
 
     try:
-        next_page_token = ''
-        # loop through the comment threads until the user entered number of comments is reached or there are no more comments
-        # "no of comments" used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
-        while len(comments) < no_of_comments and next_page_token is not None: 
-            match = get_comment_threads(youtube, video_id, next_page_token)
-            next_page_token = match.get("nextPageToken")
-            load_comments(match)
-
-        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
-        if len(comments_df) == 0:
-            # raise an error if comments_df is empty
-            print("Error while fetching comments: no comments found or comments disabled.")
-            abort(500, description="Could not fetch comments!")
-        else:
-            # raise an error if there was an issue fetching comments
-            print("Comments fetched successfully.")
-        return comments_df
+        match = get_comment_threads(youtube, video_id, '')
+        load_comments(match)
+        next_page_token = match["nextPageToken"] # if the video has less than 100 top level comments this returns a keyerror
     except:
-            print("Error while fetching comments: no comments found or comments disabled.")
-            abort(500,  description="Could not fetch comments!")
+        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
+        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+        
+    try:
+        while next_page_token and len(comments) < no_of_comments: # used to reduce waiting time. if the video has a lot of comments the waiting time will be massive
+            match = get_comment_threads(youtube, video_id, next_page_token)
+            next_page_token = match["nextPageToken"]  # if the video has less than 100 top level comments this returns a keyerror
+            load_comments(match)
+        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
+        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
+    except:
+        comments_df = pd.DataFrame(comments, columns=["rawcomment"])
+        # data.to_csv("temp/temp_comments.csv", encoding="utf-8")
 
-# function to preprocess the fetched comments
+    if len(comments_df) == 0:
+        print("Error while fetching comments.")
+        abort(500, description="Could not fetch comments!")
+    else:
+        print("Comments fetched successfully.")
+    # print(comments_df)
+    # comments_df_dict = comments_df.to_dict(orient="index")
+    return comments_df
+
+
 def preprocess(comments_df):
     try:
         # copying rawcomments to a new column for preprocessing
