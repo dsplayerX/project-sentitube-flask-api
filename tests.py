@@ -85,3 +85,11 @@ def test_predict():
     predicted_df = predict(comments_df)
     assert "sentiment_predictions" in predicted_df.columns
     assert "sarcasm_predictions" in predicted_df.columns
+
+def test_getsentituberesults():
+    predicted_df = pd.DataFrame({
+        "sentiment_predictions": [0, 1, 2],
+        "sarcasm_predictions": [0, 1, 0]
+    })
+    predicted_df = getsentituberesults(predicted_df)
+    assert "sentitube_results" in predicted_df.columns
