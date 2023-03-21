@@ -33,6 +33,7 @@ api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
 
+#creating YouTube API with api key
 youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey = api_key)
 
@@ -243,6 +244,19 @@ def extensionresults():
     }
     return jsonify(results)
 
+@app.route('/getemailsecrets')
+def getemailsecrets():
+    # Retrieve the secrets from environment variables
+    service_key = os.environ.get('EMAIL_SERVICE_NAME')
+    template_key = os.environ.get('EMAIL_TEMPLATE_NAME')
+    secret_key = os.environ.get('EMAIL_SECRET_KEY')
+
+    return jsonify({
+        "serviceKey": service_key,
+        "templateKey": template_key,
+        "secretKey": secret_key
+    })
+
 # GLOBAL FUNCTIONS
 def validatelink(user_input):
     # Function for validing whether a url is from YouTube domain or not
@@ -294,10 +308,8 @@ def getvideotitle(video_id):
     # Call the videos.list method with id and part parameters
     request = youtube.videos().list(id=video_id, part="snippet")
     response = request.execute()
-
     # Get the title from the snippet object
     title = response["items"][0]["snippet"]["title"]
-
     # Return the title as plain text
     return title
 
