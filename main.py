@@ -35,14 +35,16 @@ api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
 
+#creating YouTube API with api key
+youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey = api_key)
+print("> YouTube API connected successfully!")
+
 # secrest keys for EmailJS email client
 service_key = os.environ.get('EMAIL_SERVICE_KEY')
 template_key = os.environ.get('EMAIL_TEMPLATE_KEY')
 secret_key = os.environ.get('EMAIL_SECRET_KEY')
-
-#creating YouTube API with api key
-youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey = api_key)
+print("> Email client secret keys loaded successfully!")
 
 # load saved sentiment analysis model
 sentiment_model = pickle.load(open("models/sentiment-analysis-pipeline.pkl", "rb"))
