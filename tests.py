@@ -51,3 +51,9 @@ def test_fetchcomments():
     comments = fetchcomments(video_id, no_of_comments, sort_by)
     print(len(comments))
     assert len(comments) == no_of_comments
+
+
+def test_preprocess():
+    comments_df = pd.DataFrame({"rawcomment": ["This is a test comment.", "This is another test comment."]})
+    preprocess(comments_df)
+    assert comments_df["processed_text"].tolist() == ["['test', 'comment']", "['another', 'test', 'comment']"]
