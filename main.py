@@ -58,8 +58,10 @@ print("> Sarcasm Model loaded successfully!")
 app = Flask(__name__)
 
 # wraaping app in CORS to remove CORS erros
-CORS(app)
-#CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+# CORS(app)
+
+# only allowing requests from our website and extension
+CORS(app, resources={r"/*": {"origins": ["chrome-extension://didjnobiahenpjfcnhccnafigbdmhgnl", "https://dsplayerx.github.io/project-sentitube-webapp"]}})
 
 
 @app.route('/')
@@ -460,4 +462,4 @@ def getsentituberesults(predicted_df):
         abort(500, description="Could not get SentiTube results!")
 
 if __name__ == '__main__':
-    app.run(debug=True, port=os.getenv("PORT", default=5000))
+    app.run(port=os.getenv("PORT", default=5000))
