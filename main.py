@@ -244,11 +244,12 @@ def extensionresults():
     }
     return jsonify(results)
 
+# Route to send emailjs secrets from environment to the frontend
 @app.route('/getemailsecrets')
 def getemailsecrets():
     # Retrieve the secrets from environment variables
-    service_key = os.environ.get('EMAIL_SERVICE_NAME')
-    template_key = os.environ.get('EMAIL_TEMPLATE_NAME')
+    service_key = os.environ.get('EMAIL_SERVICE_KEY')
+    template_key = os.environ.get('EMAIL_TEMPLATE_KEY')
     secret_key = os.environ.get('EMAIL_SECRET_KEY')
 
     return jsonify({
