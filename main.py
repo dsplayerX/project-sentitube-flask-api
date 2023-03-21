@@ -264,7 +264,10 @@ def getemailsecrets():
         "secretKey": secret_key
     })
 
-# GLOBAL FUNCTIONS
+# ===============================================
+# ============== GLOBAL FUNCTIONS ===============
+# ===============================================
+
 def validatelink(user_input):
     # Function for validing whether a url is from YouTube domain or not
     def is_valid_youtube_url(url):
