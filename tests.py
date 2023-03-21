@@ -37,6 +37,19 @@ print("> Sentiment Model loaded successfully!")
 sarcasm_model = pickle.load(open("models/sarcasm-analysis-pipeline.pkl", "rb"))
 print("> Sarcasm Model loaded successfully!")
 
+def test_get_video_id():
+    assert get_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
+    assert get_video_id("https://youtu.be/jNQXAC9IVRw") == "jNQXAC9IVRw"
+    assert get_video_id("https://www.youtube.com/embed/9bZkp7q19f0") == "9bZkp7q19f0"
+    assert get_video_id("https://m.youtube.com/watch?v=2Vv-BfVoq4g") == "2Vv-BfVoq4g"
+    assert get_video_id("https://www.youtube.com/watch?v=2Vv-BfVoq4g&feature=youtu.be") == "2Vv-BfVoq4g"
+
+    assert get_video_id("https://www.google.com/") == None
+    assert get_video_id("https://www.youtube.com/") == None
+    assert get_video_id("https://www.youtube.com/watch") == None
+    assert get_video_id("https://www.youtube.com/watch?v=") == None
+    assert get_video_id("https://www.youtube.com/watch?v=12345&feature=youtu.be") == "12345"
+
 
 def test_fetchcomments():
     video_id = "dQw4w9WgXcQ"
