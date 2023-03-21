@@ -252,7 +252,7 @@ def extensionresults():
     return jsonify(results)
 
 # Route to send emailjs secrets from environment to the frontend
-@app.route('/getemailsecrets')
+@app.route('/getemailsecrets', methods=['GET'])
 def getemailsecrets():
     # Retrieve the secrets from environment variables
 
