@@ -61,8 +61,8 @@ def test_getvideotitle():
     assert getvideotitle(video_id) == title
 
 def test_fetchcomments():
-    video_id = "dQw4w9WgXcQ"
-    no_of_comments = 188
+    video_id = "WGwIb_sFMcE"
+    no_of_comments = 200
     sort_by = "Newest first"
     comments = fetchcomments(video_id, no_of_comments, sort_by)
     assert len(comments) == no_of_comments
