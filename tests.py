@@ -50,6 +50,15 @@ def test_get_video_id():
     assert get_video_id("https://www.youtube.com/watch?v=") == None
     assert get_video_id("https://www.youtube.com/watch?v=12345&feature=youtu.be") == "12345"
 
+    
+def test_getvideotitle():
+    video_id = "dQw4w9WgXcQ"
+    title = "Rick Astley - Never Gonna Give You Up (Official Music Video)"
+    assert getvideotitle(video_id) == title
+
+    video_id = "WGwIb_sFMcE"
+    title = "Daneliya Tuleshova Sings a POWERFUL Rendition of \"Arcade\" by Duncan Laurence | AGT: All-Stars 2023"
+    assert getvideotitle(video_id) == title
 
 def test_fetchcomments():
     video_id = "dQw4w9WgXcQ"
