@@ -61,7 +61,7 @@ app = Flask(__name__)
 # CORS(app)
 
 # only allowing requests from our website and extension
-CORS(app, resources={r"/*": {"origins": ["chrome-extension://didjnobiahenpjfcnhccnafigbdmhgnl", "https://dsplayerx.github.io/project-sentitube-webapp"]}})
+CORS(app, resources={r"/*": {"origins": ["chrome-extension://didjnobiahenpjfcnhccnafigbdmhgnl", "https://dsplayerx.github.io"]}})
 
 
 @app.route('/')
