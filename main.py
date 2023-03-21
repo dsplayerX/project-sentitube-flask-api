@@ -29,9 +29,16 @@ from nltk.corpus import wordnet as wn
 
 # Loading environment variables from .env file
 load_dotenv()
+
+# configuring youtube API parameters
 api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
+
+# secrest keys for EmailJS email client
+service_key = os.environ.get('EMAIL_SERVICE_KEY')
+template_key = os.environ.get('EMAIL_TEMPLATE_KEY')
+secret_key = os.environ.get('EMAIL_SECRET_KEY')
 
 #creating YouTube API with api key
 youtube = googleapiclient.discovery.build(
@@ -248,9 +255,6 @@ def extensionresults():
 @app.route('/getemailsecrets')
 def getemailsecrets():
     # Retrieve the secrets from environment variables
-    service_key = os.environ.get('EMAIL_SERVICE_KEY')
-    template_key = os.environ.get('EMAIL_TEMPLATE_KEY')
-    secret_key = os.environ.get('EMAIL_SECRET_KEY')
 
     return jsonify({
         "serviceKey": service_key,
