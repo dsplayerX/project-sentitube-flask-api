@@ -57,3 +57,9 @@ def test_preprocess():
     comments_df = pd.DataFrame({"rawcomment": ["This is a test comment.", "This is another test comment."]})
     preprocess(comments_df)
     assert comments_df["processed_text"].tolist() == ["['test', 'comment']", "['another', 'test', 'comment']"]
+
+def test_predict():
+    comments_df = pd.DataFrame({"processed_text": ["['test', 'comment']", "['another', 'test', 'comment']"]})
+    predicted_df = predict(comments_df)
+    assert "sentiment_predictions" in predicted_df.columns
+    assert "sarcasm_predictions" in predicted_df.columns
