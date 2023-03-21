@@ -33,6 +33,7 @@ api_key = os.environ.get("API_KEY")
 api_service_name = "youtube"
 api_version = "v3"
 
+#creating YouTube API with api key
 youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey = api_key)
 
@@ -148,7 +149,8 @@ def analysisresults():
 
     # calculating percenatages for custom feedback
     check_percentage = lambda pos_per: \
-    1 if (pos_per == 0) \
+    0 if (pos_per == -1) \
+    else 1 if (pos_per == 0) \
     else 2 if (pos_per > 0 and pos_per < 5) \
     else 2 if (pos_per >= 5 and pos_per < 10) \
     else 3 if (pos_per >= 10 and pos_per < 15) \
@@ -175,7 +177,9 @@ def analysisresults():
     # count all senti positive comments and senti negative comments
     senti_total_count = senti_positive_count + senti_negative_count
     # calaculate the senti positive persentage
-    pos_per = (senti_positive_count/senti_total_count) * 100    
+    pos_per = -1
+    if senti_total_count != 0:
+        pos_per = (senti_positive_count/senti_total_count) * 100 
     final_percentage = check_percentage(pos_per)
     
     print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
@@ -240,6 +244,19 @@ def extensionresults():
     }
     return jsonify(results)
 
+@app.route('/getemailsecrets')
+def getemailsecrets():
+    # Retrieve the secrets from environment variables
+    service_key = os.environ.get('EMAIL_SERVICE_NAME')
+    template_key = os.environ.get('EMAIL_TEMPLATE_NAME')
+    secret_key = os.environ.get('EMAIL_SECRET_KEY')
+
+    return jsonify({
+        "serviceKey": service_key,
+        "templateKey": template_key,
+        "secretKey": secret_key
+    })
+
 # GLOBAL FUNCTIONS
 def validatelink(user_input):
     # Function for validing whether a url is from YouTube domain or not
@@ -291,14 +308,12 @@ def getvideotitle(video_id):
     # Call the videos.list method with id and part parameters
     request = youtube.videos().list(id=video_id, part="snippet")
     response = request.execute()
-
     # Get the title from the snippet object
     title = response["items"][0]["snippet"]["title"]
-
     # Return the title as plain text
     return title
 
-
+# function to fetch comments from given YouTube Video ID, number of comments and the sorting order
 def fetchcomments(video_id, no_of_comments, sort_by):
 
     order_by = "relevance" # default order is relavance
@@ -307,7 +322,7 @@ def fetchcomments(video_id, no_of_comments, sort_by):
     if (sort_by == "Newest first"):
         order_by = "time"
 
-    print("Commennts to fetch: ", no_of_comments, "\nOrder by: ", order_by)
+    print("Comments to fetch: ", no_of_comments, "\nOrder by: ", order_by)
 
     comments = []
 
@@ -369,7 +384,6 @@ def preprocess(comments_df):
 
         # Change all the text to lower case. This is required as python interprets 'dog' and 'DOG' differently
         comments_df['processed_text'] = [str(entry).lower() for entry in comments_df['processed_text']]
-
         # Tokenization : In this each entry in the corpus will be broken into set of words
         comments_df['processed_text'] = [word_tokenize(entry) for entry in comments_df['processed_text']]
 
@@ -381,17 +395,17 @@ def preprocess(comments_df):
         tag_map['R'] = wn.ADV
         for index,entry in enumerate(comments_df['processed_text']):
             # Declaring Empty List to store the words that follow the rules for this step
-            Processed_text = []
+            Processed_words = []
             # Initializing WordNetLemmatizer()
             word_Lemmatized = WordNetLemmatizer()
             # pos_tag function below will provide the 'tag' i.e if the word is Noun(N) or Verb(V) or something else.
             for word, tag in pos_tag(entry):
                 # Below condition is to check for Stop words and consider only alphabets
                 if word not in stopwords.words('english') and word.isalpha():
-                    word_Final = word_Lemmatized.lemmatize(word,tag_map[tag[0]])
-                    Processed_text.append(word_Final)
+                    word_Processed = word_Lemmatized.lemmatize(word,tag_map[tag[0]])
+                    Processed_words.append(word_Processed)
             # The final processed set of words for each iteration will be stored in 'text_final'
-            comments_df.loc[index,'processed_text'] = str(Processed_text)
+            comments_df.loc[index,'processed_text'] = str(Processed_words)
     
         print("Comments preprocessed successfully.")
 
