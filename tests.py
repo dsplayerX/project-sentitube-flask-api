@@ -1,7 +1,7 @@
 import pytest
 
 # importing functions from the main
-from main import get_video_id, getvideotitle, fetchcomments, preprocess, predict, getsentituberesults
+from main import validatelink, get_video_id, getvideotitle, fetchcomments, preprocess, predict, getsentituberesults
 
 import googleapiclient.discovery # youtube api
 import os
@@ -36,6 +36,13 @@ print("> Sentiment Model loaded successfully!")
 # load saved sarcasm analysis model
 sarcasm_model = pickle.load(open("models/sarcasm-analysis-pipeline.pkl", "rb"))
 print("> Sarcasm Model loaded successfully!")
+
+def test_validatelink():
+    assert validatelink("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    assert validatelink("https://www.youtube.com/embed/9bZkp7q19f0") == "https://www.youtube.com/embed/9bZkp7q19f0"
+    assert validatelink("https://www.youtube.com/watch?v=WGwIb_sFMcE&list=RDWGwIb_sFMcE&start_radio=1") == "https://www.youtube.com/watch?v=WGwIb_sFMcE&list=RDWGwIb_sFMcE&start_radio=1"
+    assert validatelink("https://www.google.com/watch?v=2Vv-BfVoq4g") == "INVALID URL"
+    assert validatelink("https://www.amazon.com") == "INVALID URL"
 
 def test_get_video_id():
     assert get_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
