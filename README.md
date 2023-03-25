@@ -2,6 +2,14 @@
 
 Sentitube-Flask-API is a Flask-based web API for sentiment analysis of YouTube comments. The API uses Google's YouTube API to fetch comments from a specified YouTube video and analyzes both sentiment and sarcasm of the comments to give more accurate sentiment results.
 
+## Other "Project SentiTube" Repositories
+
+Access other "Project SentiTube" repositories from below links.
+
+- [React Website (Frontend)](https://github.com/dsplayerX/project-sentitube-flask-api) - The frontend of SentiTube where the users can interact with and use our service.
+- [The Chrome Extension](https://github.com/dsplayerX/project-sentitube-chrome-extension) - A Chrome Extension that a user can easily access when watching a YouTube video that shows basic results to the user at a glance.
+- [Project SentiTube Tests](https://github.com/dsplayerX/project-sentitube-tests) - This repository contains all the past machine learning modelling and mockup apis and webapps.
+
 ## Features
 
 - Fetches comments from a YouTube video using YouTube API.
