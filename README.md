@@ -8,7 +8,7 @@ You can access the SentiTube webapp by clicking on [this link](https://dsplayerx
 
 Access other "Project SentiTube" repositories from below links.
 
-- [React Website (Frontend)](https://github.com/dsplayerX/project-sentitube-flask-api) - The frontend of SentiTube where the users can interact with and use our service.
+- [React Website (Frontend)](https://github.com/dsplayerX/project-sentitube-webapp) - The frontend of SentiTube where the users can interact with and use our service.
 - [The Chrome Extension](https://github.com/dsplayerX/project-sentitube-chrome-extension) - A Chrome Extension that a user can easily access when watching a YouTube video that shows basic results to the user at a glance.
 - [Project SentiTube Tests](https://github.com/dsplayerX/project-sentitube-tests) - This repository contains all the past machine learning modelling and mockup apis and webapps.
 
