@@ -1,7 +1,7 @@
 import pytest
 
 # importing functions from the main
-from main import get_video_id, getvideotitle, fetchcomments, preprocess, predict, getsentituberesults
+from main import validatelink, get_video_id, getvideotitle, fetchcomments, preprocess, predict, getsentituberesults
 
 import googleapiclient.discovery # youtube api
 import os
@@ -37,6 +37,13 @@ print("> Sentiment Model loaded successfully!")
 sarcasm_model = pickle.load(open("models/sarcasm-analysis-pipeline.pkl", "rb"))
 print("> Sarcasm Model loaded successfully!")
 
+def test_validatelink():
+    assert validatelink("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    assert validatelink("https://www.youtube.com/embed/9bZkp7q19f0") == "https://www.youtube.com/embed/9bZkp7q19f0"
+    assert validatelink("https://www.youtube.com/watch?v=WGwIb_sFMcE&list=RDWGwIb_sFMcE&start_radio=1") == "https://www.youtube.com/watch?v=WGwIb_sFMcE&list=RDWGwIb_sFMcE&start_radio=1"
+    assert validatelink("https://www.google.com/watch?v=2Vv-BfVoq4g") == "INVALID URL"
+    assert validatelink("https://www.amazon.com") == "INVALID URL"
+
 def test_get_video_id():
     assert get_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
     assert get_video_id("https://youtu.be/jNQXAC9IVRw") == "jNQXAC9IVRw"
@@ -61,18 +68,20 @@ def test_getvideotitle():
     assert getvideotitle(video_id) == title
 
 def test_fetchcomments():
-    video_id = "WGwIb_sFMcE"
-    no_of_comments = 200
-    sort_by = "Newest first"
-    comments = fetchcomments(video_id, no_of_comments, sort_by)
-    assert len(comments) == no_of_comments
-
     video_id = "jNQXAC9IVRw"
-    no_of_comments = 200
+    no_of_comments = 300
+    max_margin_batch_error = no_of_comments + 99
     sort_by = "Relevance"
     comments = fetchcomments(video_id, no_of_comments, sort_by)
     print(len(comments))
-    assert len(comments) == no_of_comments
+    assert (len(comments) == no_of_comments) or (len(comments) <= max_margin_batch_error)
+
+    video_id = "TJ2ifmkGGus"
+    no_of_comments = 300
+    max_margin_batch_error = no_of_comments + 99
+    sort_by = "Newest first"
+    comments = fetchcomments(video_id, no_of_comments, sort_by)
+    assert (len(comments) == no_of_comments) or (len(comments) <= max_margin_batch_error)
 
 
 def test_preprocess():

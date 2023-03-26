@@ -68,55 +68,8 @@ CORS(app, resources={r"/*": {"origins": ["chrome-extension://didjnobiahenpjfcnhc
 def index():
     return jsonify({"SentiTube Backend API": "SentiTube by phoeniX"})
 
-@app.route('/testsenitituberesults', methods=['GET'])
-def testresults():
-    # Getting the UserInput
-    user_input = request.args.get('userinput', default = "", type = str)
 
-    print("User-Input: ", user_input)
-    yt_url = validatelink(user_input)
-    if yt_url == "INVALID URL":
-        return ("Invalid URL")
-    vid_id = get_video_id(yt_url)
-    fetched_comments = fetchcomments(vid_id, 250)
-    processed_comments = preprocess(fetched_comments)
-    predicted_comments= predict(processed_comments)
-    sentitube_comments= getsentituberesults(predicted_comments)
-
-
-    total_comments = int(predicted_comments.shape[0])
-    # counts from sentiment analysis
-    positive_count = int((predicted_comments['sentiment_predictions'] == 2).sum())
-    neutral_count = int((predicted_comments['sentiment_predictions'] == 1).sum())
-    negative_count = int((predicted_comments['sentiment_predictions'] == 0).sum())
-    #counts from sarcasm analysis
-    sarcastic_count = int((predicted_comments['sarcasm_predictions'] == 1).sum())
-    nonsarcastic_count = int((predicted_comments['sarcasm_predictions'] == 0).sum())
-    #counts from sentitube results
-    senti_positive_count = int((predicted_comments['sentitube_results'] == 'positive').sum())
-    senti_neutral_count = int((predicted_comments['sentitube_results'] == 'neutral').sum())
-    senti_negative_count = int((predicted_comments['sentitube_results'] == 'negative').sum())
-    sentidiscard = int((predicted_comments['sentitube_results'] == 'discard').sum())
-
-
-
-    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
-    # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
-    #return jsonify(newDict)
-    results = {
-        'Positive Comments':positive_count,
-        'Neutral Comments':neutral_count,
-        'Negative Comments':negative_count,
-        'Sarcastic Comments':sarcastic_count,
-        'Nonsarcastic Comments':nonsarcastic_count,
-        'Total Comments':total_comments,
-        'Sentitube Positve' :senti_positive_count,
-        'Sentitube Neutral' :senti_neutral_count,
-        'Sentitube Negative' :senti_negative_count,
-        'Discard': sentidiscard,
-    }
-    return jsonify(results)
-
+# Route for the website
 @app.route('/analysisresults', methods=['POST'])
 def analysisresults():
     # Getting the UserInput
@@ -213,6 +166,7 @@ def analysisresults():
     # returns the dictionary as a JSON object using the 'jsonify()' method
     return jsonify(results)
 
+# Route for the chrome extension
 @app.route('/extensionresults', methods=['GET'])
 def extensionresults():
     # Getting the UserInput
@@ -289,18 +243,15 @@ def validatelink(user_input):
             return False
     
     # Validating the user_input to check if it's a YouTube URL or not
-    if user_input and is_valid_youtube_url(user_input):
+    if is_valid_youtube_url(user_input):
         print("User input is a Valid YouTube URL")
+        return user_input
+        
     else:
         print("User input is a INVALID YouTube URL")
         return ("INVALID URL")
     
-    # If all the validations are passed, the user_input is assigned as the youtube_url to extract the video id
-    youtube_url = user_input
-    print("Valid YouTube URL entered.")
-    return youtube_url
-
-
+    
 def get_video_id(youtube_url):
     # Extracting the Video ID from the YouTube URL
     youtube_hostnames = ("www.youtube.com", "youtube.com", "m.youtube.com", "youtu.be")
