@@ -335,6 +335,7 @@ def fetchcomments(video_id, no_of_comments, sort_by):
         print("Comments fetched successfully.")
     # print(comments_df)
     # comments_df_dict = comments_df.to_dict(orient="index")
+    comments_df = comments_df[:no_of_comments] # slicing the dataframe to the number of comments user wants incase of batch missmatch
     return comments_df
 
 
