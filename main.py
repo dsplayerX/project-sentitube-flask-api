@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request, abort # redirect, url_for
 from flask_cors import CORS # fix for CORS error
 import os
+import datetime
+
 import googleapiclient.discovery # youtube api
 import pandas as pd
 from dotenv import load_dotenv # loading api keys from enviroment
@@ -72,6 +74,9 @@ def index():
 # Route for the website
 @app.route('/analysisresults', methods=['POST'])
 def analysisresults():
+    
+    current_time = datetime.datetime.now()
+    print("####################################### \n> Website Request at:", current_time)
     # Getting the UserInput
     # user_input = request.args.get('userinput', default = "", type = str)
     data = request.get_json()
@@ -146,7 +151,7 @@ def analysisresults():
         pos_per = (senti_positive_count/senti_total_count) * 100 
     final_percentage = check_percentage(pos_per)
     
-    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count, senti_positive_count, senti_neutral_count, senti_negative_count)
+    print("Results: T", total_comments, "/ Pos", positive_count, "/ Neu", neutral_count, "/ Neg", negative_count, "/ S", sarcastic_count, "/ NS", nonsarcastic_count, "/ SPos", senti_positive_count, "/ SNeg", senti_negative_count)
     print(check_percentage)
     results = {
         'Video Title': vid_title,
@@ -169,6 +174,8 @@ def analysisresults():
 # Route for the chrome extension
 @app.route('/extensionresults', methods=['GET'])
 def extensionresults():
+    current_time = datetime.datetime.now()
+    print("#######################################  \n> Extension Request at:", current_time)
     # Getting the UserInput
     user_input = request.args.get('userinput', default = "", type = str)
     numresults = 300
@@ -193,7 +200,8 @@ def extensionresults():
     senti_neutral_count = int((sentitube_comments['sentitube_results'] == 'neutral').sum())
     senti_negative_count = int((sentitube_comments['sentitube_results'] == 'negative').sum())
 
-    print(total_comments, positive_count, neutral_count, negative_count, sarcastic_count, nonsarcastic_count)
+    print("Results: T", total_comments, "/ Pos", positive_count, "/ Neu", neutral_count, "/ Neg", negative_count, "/ S", sarcastic_count, "/ NS", nonsarcastic_count, "/ SPos", senti_positive_count, "/ SNeg", senti_negative_count)
+
     # comments_dict = predicted_comments["rawcomment"].to_dict(orient="index")
     #return jsonify(newDict)
     results = {
