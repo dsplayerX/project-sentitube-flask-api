@@ -226,6 +226,33 @@ def getemailsecrets():
         "secretKey": secret_key
     })
 
+# Route for the website
+@app.route('/customtextanalysis', methods=['POST'])
+def customtextanalysis():
+    
+    current_time = datetime.datetime.now()
+    print("####################################### \n> Website Request at:", current_time)
+
+    # Getting the UserInput
+    data = request.get_json()
+    user_input = data["userinput"] # text user entered
+    
+    # turn the user input into a dataframe
+    user_input_df = pd.DataFrame([user_input], columns=['rawcomment'])
+    
+    processed_comments = preprocess(user_input_df)
+    # Use the trained model to predict the sentiment and sarcasm of the preprocessed comments
+    predicted_comments= predict(processed_comments)
+    sentitube_comments= getsentituberesults(predicted_comments)
+
+    # Create a dictionary called final comments dict and kept comment results on it.
+    final_comments_dict = sentitube_comments.to_dict(orient="index")
+    # print(final_comments_dict)
+
+    # returns the dictionary as a JSON object using the 'jsonify()' method
+    return jsonify(final_comments_dict)
+
+
 # ===============================================
 # ============== GLOBAL FUNCTIONS ===============
 # ===============================================
