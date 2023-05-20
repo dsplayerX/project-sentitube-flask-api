@@ -11,6 +11,9 @@ import pickle # for loading models into API
 import nltk # used for preprocessing of fetched comments
 from collections import defaultdict
 
+import openai # openai api
+from youtube_transcript_api import YouTubeTranscriptApi # getting transcript from youtube video
+
 # Download dependency
 for dependency in (
     "punkt",
@@ -31,6 +34,9 @@ from nltk.corpus import wordnet as wn
 
 # Loading environment variables from .env file
 load_dotenv()
+
+# loading openai api key from enviroment
+open_api_key = os.environ.get("OPENAI_API_KEY")
 
 # configuring youtube API parameters
 api_key = os.environ.get("API_KEY")
@@ -151,6 +157,22 @@ def analysisresults():
     
     print("Results: T", total_comments, "/ Pos", positive_count, "/ Neu", neutral_count, "/ Neg", negative_count, "/ S", sarcastic_count, "/ NS", nonsarcastic_count, "/ SPos", senti_positive_count, "/ SNeg", senti_negative_count)
     print(check_percentage)
+
+    summary = "" # initialize the summary to empty string
+    if (open_api_key != "XXX"): # if the open api key is not XXX, then call the open api
+        # Get the transcript of the YouTube video
+        transcript = get_youtube_transcript(vid_id)
+        # print(transcript)
+        if transcript == "":
+            summary = ""
+        else:
+            # Summarize the transcript
+            summary = summarize_text(transcript, vid_title)
+            # print("sum:", summary)
+            if (summary == None):
+                summary = ""
+            # print(summary)
+    
     results = {
         'Video Title': vid_title,
         'Video Id': vid_id,
@@ -164,8 +186,10 @@ def analysisresults():
         'Sentitube Neutral' :senti_neutral_count,
         'Sentitube Negative' :senti_negative_count,
         'CustomFeedbackNo' : final_percentage,
-        'Comments Dictionary':final_comments_dict
+        'Comments Dictionary':final_comments_dict,
+        'Video Summary' : summary,
     }
+
     # returns the dictionary as a JSON object using the 'jsonify()' method
     return jsonify(results)
 
@@ -445,6 +469,44 @@ def getsentituberesults(predicted_df):
     except:
         print("!!!Couldn't get SentiTube results.")
         abort(500, description="Could not get SentiTube results!")
+
+
+def get_youtube_transcript(video_id):
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript_text = " ".join([caption['text'] for caption in transcript])
+
+        return transcript_text
+    except:
+        print("!!!Error while fetching transcript.")
+        #abort(500, description="Could not fetch transcript!")
+
+def summarize_text(text, title):
+    try:
+        # Set up OpenAI API credentials
+        openai.api_key = open_api_key  # Replace with your OpenAI API key
+
+        # Define the chat completion prompt
+        prompt = f"start as 'This video is about' and summarize the following in no more than 60 words: Video Title:{title} and transcript:{text}."
+
+        # Generate the response using OpenAI's ChatGPT model
+        response = openai.Completion.create(
+            engine='text-davinci-003',
+            prompt=prompt,
+            max_tokens=150,  # Adjust the desired length of the summary
+            temperature=0.3,  # Adjust the level of randomness in the response
+            n=1,
+            stop=None,
+            timeout=15  # Adjust the timeout as needed
+        )
+
+        # Extract the summarized text from the API response
+        summary = response.choices[0].text.strip()
+        print(response)
+        return summary
+    except:
+        print("!!!Error while summarizing text.")
+        #abort(500, description="Could not summarize text!")
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
