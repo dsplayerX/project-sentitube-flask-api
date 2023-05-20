@@ -18,7 +18,7 @@ def summarize_text(text):
     openai.api_key = open_api_key  # Replace with your OpenAI API key
 
     # Define the chat completion prompt
-    prompt = f"summarize this youtube video transcript in 50 words (only output the summarization): {text}"
+    prompt = f"start as 'This video is about' and summarize the following in no more than 60 words: {text}."
 
     # Generate the response using OpenAI's ChatGPT model
     response = openai.Completion.create(
@@ -37,7 +37,7 @@ def summarize_text(text):
     return summary
 
 # Test the script with a YouTube video ID
-video_id = "VaJh0svVuMc"  # Replace with the ID of the YouTube video
+video_id = "Qa4K7XsRO0g"  # Replace with the ID of the YouTube video
 
 # Get the transcript of the YouTube video
 transcript = get_youtube_transcript(video_id)
