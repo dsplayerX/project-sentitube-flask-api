@@ -19,8 +19,6 @@ for dependency in (
     "punkt",
     "stopwords",
     "wordnet",
-    "porter_test",
-    "maxent_treebank_pos_tagger",
     "averaged_perceptron_tagger"
 ):
     nltk.download(dependency)
