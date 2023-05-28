@@ -161,3 +161,4 @@ pip-selfcheck.json
 # Temporary files used in development
 temp/temp_comments.csv
 temp/
+mock_scripts/
