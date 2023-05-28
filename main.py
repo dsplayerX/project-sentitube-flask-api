@@ -10,6 +10,7 @@ from urllib.parse import urlparse, parse_qs # for formatting yt url
 import pickle # for loading models into API
 import nltk # used for preprocessing of fetched comments
 from collections import defaultdict
+import numpy as np
 
 import openai # openai api
 from youtube_transcript_api import YouTubeTranscriptApi # getting transcript from youtube video
@@ -57,7 +58,7 @@ sentiment_model = pickle.load(open("models/sentiment-analysis-pipeline.pkl", "rb
 print("> Sentiment Model loaded successfully!")
 
 # load saved sarcasm analysis model
-sarcasm_model = pickle.load(open("models/sarcasm-analysis-pipeline.pkl", "rb"))
+sarcasm_model = pickle.load(open("models/sarcasm-analysis-pipeline-v2-prob.pkl", "rb"))
 print("> Sarcasm Model loaded successfully!")
 
 # creating an flask app
@@ -156,21 +157,29 @@ def analysisresults():
     print("Results: T", total_comments, "/ Pos", positive_count, "/ Neu", neutral_count, "/ Neg", negative_count, "/ S", sarcastic_count, "/ NS", nonsarcastic_count, "/ SPos", senti_positive_count, "/ SNeg", senti_negative_count)
     print(check_percentage)
 
-    summary = "" # initialize the summary to empty string
+    # OPEN AI IMPLEMENTATION
+    summary_video = "" # initialize the summary to empty string
     if (open_api_key != "XXX"): # if the open api key is not XXX, then call the open api
         # Get the transcript of the YouTube video
         transcript = get_youtube_transcript(vid_id)
         # print(transcript)
         if transcript == "":
-            summary = ""
+            summary_video = ""
         else:
             # Summarize the transcript
-            summary = summarize_text(transcript, vid_title)
-            # print("sum:", summary)
-            if (summary == None):
-                summary = ""
-            # print(summary)
+            summary_video = summarize_video(transcript, vid_title)
+            # print("sum:", summary_video)
+            if (summary_video == None):
+                summary_video = ""
+            # print(summary_video)
+
+        # Summarize the comments
+        summary_comments = summarize_comments(final_comments_dict, vid_title)
+        print("comments sum:", summary_comments)
+        if (summary_comments == None):
+            summary_comments = ""
     
+
     results = {
         'Video Title': vid_title,
         'Video Id': vid_id,
@@ -185,7 +194,8 @@ def analysisresults():
         'Sentitube Negative' :senti_negative_count,
         'CustomFeedbackNo' : final_percentage,
         'Comments Dictionary':final_comments_dict,
-        'Video Summary' : summary,
+        'Video Summary' : summary_video,
+        'Comments Summary' : summary_comments,
     }
 
     # returns the dictionary as a JSON object using the 'jsonify()' method
@@ -438,8 +448,17 @@ def predict(comments_df):
         # adding sentiment and sarcasm predictions columns to dataframe
         comments_df['sentiment_predictions'] = sentiment_model.predict(comments_df["processed_text"])
         print("Sentiments predicted successfully.")
+        
+        # comments_df['sarcasm_predictions'] = sarcasm_model.predict(comments_df["processed_text"])
 
-        comments_df['sarcasm_predictions'] = sarcasm_model.predict(comments_df["processed_text"])
+        sarc_predictions = sarcasm_model.predict_proba(comments_df["processed_text"])
+        
+        # Custom threshold
+        threshold = 0.75
+
+        # Calculate predictions based on the threshold
+        sarc_predictions = np.where(sarc_predictions[:, 1] > threshold, 1, 0)
+        comments_df['sarcasm_predictions'] = sarc_predictions
         print("Sarcasm predicted successfully.")
 
         # copying the dataframe and dropping the column used in preprocessing
@@ -479,10 +498,10 @@ def get_youtube_transcript(video_id):
         print("!!!Error while fetching transcript.")
         #abort(500, description="Could not fetch transcript!")
 
-def summarize_text(text, title):
+def summarize_video(text, title):
     try:
         # Set up OpenAI API credentials
-        openai.api_key = open_api_key  # Replace with your OpenAI API key
+        openai.api_key = open_api_key
 
         # Define the chat completion prompt
         prompt = f"start as 'This video is about' and summarize the following in no more than 60 words: Video Title:{title} and transcript:{text}."
@@ -499,12 +518,43 @@ def summarize_text(text, title):
         )
 
         # Extract the summarized text from the API response
-        summary = response.choices[0].text.strip()
-        print(response)
-        return summary
+        video_summary = response.choices[0].text.strip()
+        #print(response)
+        return video_summary
     except:
-        print("!!!Error while summarizing text.")
-        #abort(500, description="Could not summarize text!")
+        print("!!!Error while summarizing video.")
+        #abort(500, description="Could not summarize video!")
 
+def summarize_comments(dict, title):
+    try:
+        # Concatenate comments into a single string
+        max_comments = 10
+        text = ", ".join(comment['rawcomment'] for comment in list(dict.values())[1:max_comments])
+        #print(text)
+        # Set up OpenAI API credentials
+        openai.api_key = open_api_key
+
+        # Define the chat completion prompt
+        prompt = f"start as 'Comment section talks about' and summarize the comment section in no more than 60 words: Comment section comments:{text}."
+
+        # Generate the response using OpenAI's ChatGPT model
+        response = openai.Completion.create(
+            engine='text-davinci-003',
+            prompt=prompt,
+            max_tokens=150,  # Adjust the desired length of the summary
+            temperature=0.3,  # Adjust the level of randomness in the response
+            n=1,
+            stop=None,
+            timeout=15  # Adjust the timeout as needed
+        )
+
+        # Extract the summarized text from the API response
+        comments_summary = response.choices[0].text.strip()
+        #print(response)
+        return comments_summary
+    except:
+        print("!!!Error while summarizing comments.")
+        #abort(500, description="Could not summarize comments!")  
+      
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
