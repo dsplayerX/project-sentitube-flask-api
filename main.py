@@ -509,7 +509,7 @@ def summarize_video(text, title):
         # Generate the response using OpenAI's ChatGPT model
         response = openai.Completion.create(
             engine='text-davinci-003',
-            prompt=prompt,
+            prompt=prompt[:5000],
             max_tokens=150,  # Adjust the desired length of the summary
             temperature=0.3,  # Adjust the level of randomness in the response
             n=1,
@@ -528,7 +528,7 @@ def summarize_video(text, title):
 def summarize_comments(dict, title):
     try:
         # Concatenate comments into a single string
-        max_comments = 10
+        max_comments = 11
         text = ", ".join(comment['rawcomment'] for comment in list(dict.values())[1:max_comments])
         #print(text)
         # Set up OpenAI API credentials
