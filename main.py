@@ -170,14 +170,14 @@ def analysisresults():
         else:
             # Summarize the transcript
             summary_video = summarize_video(transcript, vid_title)
-            # print("sum:", summary_video)
+            print("> video sum:", summary_video)
             if (summary_video == None):
                 summary_video = ""
             # print(summary_video)
 
         # Summarize the comments
         summary_comments = summarize_comments(final_comments_dict, vid_title)
-        print("comments sum:", summary_comments)
+        print("> comments sum:", summary_comments)
         if (summary_comments == None):
             summary_comments = ""
     
@@ -506,8 +506,12 @@ def summarize_video(text, title):
         openai.api_key = open_api_key
 
         # Define the chat completion prompt
-        prompt = f"start as 'This video is about' and summarize the following in no more than 60 words: Video Title:{title} and transcript:{text}."
-        prompt_shorter = prompt[:10000] + "..."
+        prompt = f"start as 'This video is about' and summarize the following in no more than 60 words in english. Video Title:{title} and transcript:{text}."
+        if (len(prompt) > 12500):
+            prompt_shorter = prompt[:10000] + "..." + (prompt[(len(prompt) - 6000):(len(prompt) - 1000)]) + "..."
+            # print(prompt_shorter)
+        else:
+            prompt_shorter = prompt
 
         # Generate the response using OpenAI's ChatGPT model
         response = openai.Completion.create(
@@ -538,7 +542,7 @@ def summarize_comments(dict, title):
         openai.api_key = open_api_key
 
         # Define the chat completion prompt
-        prompt = f"start as 'Comment section talks about' and summarize the comment section in no more than 60 words: Comment section comments:{text}."
+        prompt = f"start as 'Comment section talks about' and summarize the comment section in no more than 60 words in english. Comments:{text}."
 
         # Generate the response using OpenAI's ChatGPT model
         response = openai.Completion.create(
