@@ -505,11 +505,12 @@ def summarize_video(text, title):
 
         # Define the chat completion prompt
         prompt = f"start as 'This video is about' and summarize the following in no more than 60 words: Video Title:{title} and transcript:{text}."
+        prompt_shorter = prompt[:10000] + "..."
 
         # Generate the response using OpenAI's ChatGPT model
         response = openai.Completion.create(
             engine='text-davinci-003',
-            prompt=prompt[:10000],
+            prompt=prompt_shorter,
             max_tokens=150,  # Adjust the desired length of the summary
             temperature=0.3,  # Adjust the level of randomness in the response
             n=1,
