@@ -509,7 +509,7 @@ def summarize_video(text, title):
         # Generate the response using OpenAI's ChatGPT model
         response = openai.Completion.create(
             engine='text-davinci-003',
-            prompt=prompt[:5000],
+            prompt=prompt[:10000],
             max_tokens=150,  # Adjust the desired length of the summary
             temperature=0.3,  # Adjust the level of randomness in the response
             n=1,
